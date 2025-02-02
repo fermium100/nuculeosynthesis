@@ -1,0 +1,30 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#research-funding {
+    margin: 10px;
+    font-size: 18px;
+}
+
+#game-board, #hand {
+    margin: 20px;
+}
+
+.card {
+    display: inline-block;
+    border: 1px solid #333;
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.selected {
+    border-color: red;
+}
+
+#reset-button, #buy-action-card {
+    margin-top: 20px;
+    padding: 10px 20px;
+}
