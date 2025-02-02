@@ -328,14 +328,10 @@ document.getElementById('reset-button').addEventListener('click', () => {
     resetGame();
 });
 
-// アクションカード購入ボタンのイベントリスナー
-document.getElementById('buy-action-card').addEventListener('click', () => {
-    buyActionCard();
-});
-
 // アクションカードを引く関数を修正
 function drawActionCard() {
-    // handLimitグローバル変数を使用して現在の手札上限をチェック
+    console.log('drawActionCard called'); // デバッグ用ログ
+    
     if (playerHand.length >= handLimit) {
         showNotification(`手札が上限（${handLimit}枚）に達しています。`, 'error');
         return false;
@@ -766,19 +762,27 @@ function sellElement(index) {
     updateGameBoard();
 }
 
-// アクションカードを購入する関数
+// アクションカードを購入する関数を修正
 function buyActionCard() {
     const actionCardCost = 50;
-    if (playerHand.length >= handLimit) {  // ここも handLimit を使用
+    
+    // 手札制限のチェック
+    if (playerHand.length >= handLimit) {
         showNotification(`手札が上限（${handLimit}枚）に達しています。`, 'error');
         return;
     }
-    if (researchFunding >= actionCardCost) {
-        researchFunding -= actionCardCost;
-        drawActionCard();
-        updateGameBoard();
-    } else {
+    
+    // 研究費のチェック
+    if (researchFunding < actionCardCost) {
         showNotification('研究費が不足しています。', 'error');
+        return;
+    }
+
+    // カードを1枚だけ引く
+    if (drawActionCard()) {
+        researchFunding -= actionCardCost;
+        updateGameBoard();
+        showNotification('アクションカードを1枚購入しました。');
     }
 }
 
@@ -1037,10 +1041,12 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', () => setDifficulty(difficulty));
     }
 
-    // その他の初期化処理
+    // アクションカード購入ボタンのイベントリスナー（ここだけに設定）
     document.getElementById('buy-action-card').addEventListener('click', buyActionCard);
+    
+    // その他の初期化処理
     document.getElementById('reset-button').addEventListener('click', resetGame);
-    initializeStyles(); // スタイルの初期化
+    initializeStyles();
 
     // 手札拡張ボタンのイベントリスナーを設定
     document.getElementById('expand-hand-button').addEventListener('click', expandHandLimit);
