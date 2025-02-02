@@ -245,6 +245,16 @@ const trivia = {
     ]
 };
 
+// アクションカード画像のマッピングを追加
+const ACTION_CARD_IMAGES = {
+    '中性子線照射': 'neutronIrradiation.png',
+    'α崩壊': 'alphaDecay.png',
+    '核融合': 'nuclearFusion.png',
+    '核分裂': 'nuclearFission.png',
+    '元素ガチャ': 'elementGacha.png',
+    '科研費獲得': 'grantFunding.png'
+};
+
 // プレイヤーの手札と場
 let playerHand = [];
 let playerField = [{ number: 1, symbol: 'H', price: 1 }]; // 初期は水素
@@ -471,11 +481,23 @@ function updateGameBoard() {
         
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
-        cardDiv.innerText = card;
-        
         if (currentActionCardIndex === index) {
             cardDiv.classList.add('selected');
         }
+        
+        // 画像要素を作成
+        const cardImage = document.createElement('img');
+        cardImage.src = ACTION_CARD_IMAGES[card];
+        cardImage.alt = card;
+        cardImage.className = 'card-image';
+        cardDiv.appendChild(cardImage);
+
+        // カード名を表示
+        const cardName = document.createElement('div');
+        cardName.className = 'card-name';
+        cardName.textContent = card;
+        cardContainer.appendChild(cardDiv);
+        cardContainer.appendChild(cardName);
         
         cardDiv.addEventListener('click', () => {
             selectActionCard(index);
@@ -490,7 +512,6 @@ function updateGameBoard() {
             discardActionCard(index);
         });
         
-        cardContainer.appendChild(cardDiv);
         cardContainer.appendChild(discardButton);
         handDiv.appendChild(cardContainer);
     });
@@ -964,47 +985,89 @@ function expandHandLimit() {
 // スタイルを更新
 function initializeStyles() {
     const style = document.createElement('style');
-    style.textContent = `
-        #notification-banner {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            pointer-events: none;
-            background: none;
+    style.textContent += `
+        .card-container {
+            position: relative;
+            margin: 10px;
+            transition: transform 0.2s ease;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 12px;  /* 通知間の隙間を設定 */
+            align-items: center;
+            gap: 8px;
         }
 
-        .notification-wrapper {
-            position: relative;
-            width: 100%;
-            transition: opacity 0.3s ease;
-            pointer-events: auto;
-        }
-
-        .notification {
-            padding: 10px 20px;
-            border-radius: 4px;
-            color: white;
-            text-align: left;
-            min-width: 200px;
-            max-width: 400px;
+        .card {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            background-color: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .card.selected {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border: 2px solid #4CAF50;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-name {
+            font-size: 14px;
+            text-align: center;
+            color: #333;
+            max-width: 100px;
             word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .discard-button {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            font-size: 12px;
+        }
+
+        .card-container:hover .discard-button {
+            opacity: 1;
+            bottom: -25px;
+        }
+
+        .discard-button:hover {
+            background-color: #d32f2f;
+        }
+
+        #hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 10px;
+            justify-content: center;
         }
     `;
     document.head.appendChild(style);
-
-    const oldBanner = document.getElementById('notification-banner');
-    if (oldBanner) {
-        oldBanner.remove();
-    }
-    const newBanner = document.createElement('div');
-    newBanner.id = 'notification-banner';
-    document.body.appendChild(newBanner);
 }
 
 // 既存のHTMLの notification-banner 要素を空にする
@@ -1218,15 +1281,13 @@ class NotificationManager {
 
         notification.element.addEventListener('transitionend', (e) => {
             if (e.propertyName === 'opacity') {
-                if (notification.element.parentNode) {
-                    notification.element.remove();
-                }
-                const currentIndex = this.notifications.findIndex(n => n.id === id);
+                notification.element.removeEventListener('transitionend', handler);
+                notification.element.remove();
+                
+                const currentIndex = notifications.findIndex(n => n.id === notification.id);
                 if (currentIndex !== -1) {
-                    this.notifications.splice(currentIndex, 1);
+                    notifications.splice(currentIndex, 1);
                 }
-                // 要素が削除された後に位置を更新
-                this.updatePositions();
             }
         }, { once: true });
 
