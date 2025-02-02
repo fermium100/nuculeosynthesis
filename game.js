@@ -171,7 +171,7 @@ const actionCards = [
 
 // プレイヤーの手札と場
 let playerHand = [];
-let playerField = [{ number: 1, symbol: 'H', price: 10 }]; // 初期は水素
+let playerField = [{ number: 1, symbol: 'H', price: 1 }]; // 初期は水素
 
 // 研究費
 let researchFunding = 100;
