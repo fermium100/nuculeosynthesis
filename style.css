@@ -51,7 +51,8 @@ body {
     display: none;
     position: absolute;
     top: 100%;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
     padding: 10px;
     border: 1px solid #ccc;
@@ -69,6 +70,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    justify-content: center;
 }
 
 .element-price {
@@ -76,7 +78,7 @@ body {
     padding: 4px 8px;
     border-radius: 3px;
     font-size: 0.85em;
-    min-width: 70px;
+    min-width: 90px;
     text-align: center;
 }
 

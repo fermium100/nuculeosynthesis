@@ -232,7 +232,7 @@ function updateGameBoard() {
     elements.forEach(element => {
         const elementPrice = document.createElement('div');
         elementPrice.className = 'element-price';
-        elementPrice.innerHTML = `${element.symbol}: ¥${element.price}`;
+        elementPrice.innerHTML = `${element.number}. ${element.symbol}: ¥${element.price}`;
         priceTable.appendChild(elementPrice);
     });
     
