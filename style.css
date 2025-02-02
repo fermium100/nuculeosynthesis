@@ -29,11 +29,28 @@ body {
     padding: 10px 20px;
 }
 
+.price-list-container {
+    margin: 10px 0;
+}
+
+.toggle-price-list {
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.toggle-price-list:hover {
+    background-color: #e0e0e0;
+}
+
 .price-list {
-    margin: 10px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    background-color: #fff;
 }
 
 .price-table {
@@ -47,9 +64,4 @@ body {
     padding: 5px 10px;
     border-radius: 3px;
     font-size: 0.9em;
-}
-
-h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
 }

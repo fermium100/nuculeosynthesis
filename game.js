@@ -213,10 +213,19 @@ function updateGameBoard() {
     const gameBoard = document.getElementById('game-board');
     gameBoard.innerHTML = '';
 
-    // 元素価格リストの表示
+    // 元素価格リストの表示（折りたたみ可能）
+    const priceListContainer = document.createElement('div');
+    priceListContainer.className = 'price-list-container';
+    
+    // 折りたたみボタンの作成
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'toggle-price-list';
+    toggleButton.innerText = '価格表を表示';
+    
+    // 価格表本体
     const priceListDiv = document.createElement('div');
     priceListDiv.className = 'price-list';
-    priceListDiv.innerHTML = '<h3>元素価格表</h3>';
+    priceListDiv.style.display = 'none'; // 初期状態では非表示
     
     const priceTable = document.createElement('div');
     priceTable.className = 'price-table';
@@ -227,8 +236,17 @@ function updateGameBoard() {
         priceTable.appendChild(elementPrice);
     });
     
+    // トグルボタンのクリックイベント
+    toggleButton.addEventListener('click', () => {
+        const isHidden = priceListDiv.style.display === 'none';
+        priceListDiv.style.display = isHidden ? 'block' : 'none';
+        toggleButton.innerText = isHidden ? '価格表を隠す' : '価格表を表示';
+    });
+    
     priceListDiv.appendChild(priceTable);
-    gameBoard.appendChild(priceListDiv);
+    priceListContainer.appendChild(toggleButton);
+    priceListContainer.appendChild(priceListDiv);
+    gameBoard.appendChild(priceListContainer);
 
     // 研究費の表示を更新
     document.getElementById('research-funding').innerText = `研究費: ${researchFunding}`;
