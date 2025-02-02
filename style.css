@@ -28,3 +28,28 @@ body {
     margin-top: 20px;
     padding: 10px 20px;
 }
+
+.price-list {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.price-table {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.element-price {
+    background-color: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}

@@ -213,6 +213,23 @@ function updateGameBoard() {
     const gameBoard = document.getElementById('game-board');
     gameBoard.innerHTML = '';
 
+    // 元素価格リストの表示
+    const priceListDiv = document.createElement('div');
+    priceListDiv.className = 'price-list';
+    priceListDiv.innerHTML = '<h3>元素価格表</h3>';
+    
+    const priceTable = document.createElement('div');
+    priceTable.className = 'price-table';
+    elements.forEach(element => {
+        const elementPrice = document.createElement('div');
+        elementPrice.className = 'element-price';
+        elementPrice.innerHTML = `${element.symbol}: ¥${element.price}`;
+        priceTable.appendChild(elementPrice);
+    });
+    
+    priceListDiv.appendChild(priceTable);
+    gameBoard.appendChild(priceListDiv);
+
     // 研究費の表示を更新
     document.getElementById('research-funding').innerText = `研究費: ${researchFunding}`;
 
