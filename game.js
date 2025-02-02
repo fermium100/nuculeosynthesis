@@ -627,23 +627,32 @@ function showNotification(message, type = 'success') {
     }, displayTime);
 }
 
-// 通知を削除する関数
+// 通知を削除する関数を修正
 function removeNotification(id) {
     const index = notifications.findIndex(n => n.id === id);
     if (index !== -1) {
         const notification = notifications[index].element;
         notification.style.opacity = '0';
-        notification.addEventListener('transitionend', () => {
-            notification.remove();
-            notifications.splice(index, 1);
+        notification.style.marginBottom = '0';
+        notification.style.maxHeight = '0';
+        notifications.splice(index, 1);
+        updateNotificationPositions();
+        
+        notification.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'opacity') {
+                notification.remove();
+            }
         });
     }
 }
 
 // 通知の位置を更新する関数を修正
 function updateNotificationPositions() {
+    let currentOffset = 0;
     notifications.forEach((notification) => {
-        notification.element.style.transform = 'translateY(0)';
+        const height = notification.element.offsetHeight;
+        notification.element.style.transform = `translateY(-${currentOffset}px)`;
+        currentOffset += height + 10; // 10はmargin-bottom
     });
 }
 
@@ -769,6 +778,8 @@ function initializeStyles() {
             pointer-events: auto;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             background: none;
+            max-height: 100px;
+            overflow: hidden;
         }
     `;
     document.head.appendChild(style);
