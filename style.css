@@ -138,3 +138,29 @@ body {
 .reset-button:hover {
     background-color: #cc0000;
 }
+
+.hand-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.expand-hand-button {
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.expand-hand-button:hover {
+    background-color: #45a049;
+}
+
+.expand-hand-button.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

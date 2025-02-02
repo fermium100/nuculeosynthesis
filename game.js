@@ -192,6 +192,20 @@ const INITIAL_FUNDING = {
     hard: 100
 };
 
+// 手札の上限を管理する変数を追加
+let handLimit = 5;
+
+// 手札拡張の価格を定義
+const EXPANSION_COSTS = [1000, 10000, 100000, 1000000];
+
+// 手札拡張の価格を取得する関数
+function getExpansionCost(currentLimit) {
+    if (currentLimit < 8) {
+        return EXPANSION_COSTS[currentLimit - 5];
+    }
+    return 1000000; // 8枚以降は常に100万
+}
+
 // 難易度設定関数を修正
 function setDifficulty(difficulty) {
     currentDifficulty = difficulty;
@@ -223,8 +237,8 @@ document.getElementById('buy-action-card').addEventListener('click', () => {
 
 // アクションカードを引く関数を修正
 function drawActionCard() {
-    if (playerHand.length >= 5) {
-        showNotification('手札が上限（5枚）に達しています。', 'error');
+    if (playerHand.length >= handLimit) {
+        showNotification(`手札が上限（${handLimit}枚）に達しています。`, 'error');
         return false;
     }
 
@@ -319,10 +333,35 @@ function updateGameBoard() {
     });
     gameBoard.appendChild(fieldDiv);
 
-    // 手札のアクションカードを表示
+    // 手札の表示部分の前に拡張ボタンを追加
     const handDiv = document.getElementById('hand');
-    handDiv.innerHTML = '手札:';
+    handDiv.innerHTML = '';
     
+    // 手札の情報とボタンのコンテナ
+    const handInfoContainer = document.createElement('div');
+    handInfoContainer.className = 'hand-info';
+    
+    // 現在の手札数/上限を表示
+    const handCountDiv = document.createElement('div');
+    handCountDiv.innerText = `手札: ${playerHand.length}/${handLimit}`;
+    handInfoContainer.appendChild(handCountDiv);
+    
+    // 拡張ボタン（常に表示）
+    const expansionCost = getExpansionCost(handLimit);
+    const expandButton = document.createElement('button');
+    expandButton.className = 'expand-hand-button';
+    expandButton.innerText = `手札枠を拡張 (¥${expansionCost.toLocaleString()})`;
+    if (researchFunding >= expansionCost) {
+        expandButton.addEventListener('click', expandHandLimit);
+    } else {
+        expandButton.disabled = true;
+        expandButton.classList.add('disabled');
+    }
+    handInfoContainer.appendChild(expandButton);
+    
+    handDiv.appendChild(handInfoContainer);
+
+    // 手札のカードを表示
     playerHand.forEach((card, index) => {
         const cardContainer = document.createElement('div');
         cardContainer.className = 'card-container';
@@ -630,6 +669,7 @@ function resetGame() {
     researchFunding = INITIAL_FUNDING[currentDifficulty];
     currentActionCardIndex = null;
     selectedElementIndices = [];
+    handLimit = 5; // 手札の上限をリセット
 
     // 手札を5枚引く
     for (let i = 0; i < 5; i++) {
@@ -659,6 +699,19 @@ function discardActionCard(index) {
     }
     
     updateGameBoard();
+}
+
+// 手札枠を拡張する関数を修正
+function expandHandLimit() {
+    const expansionCost = getExpansionCost(handLimit);
+    if (researchFunding >= expansionCost) {
+        researchFunding -= expansionCost;
+        handLimit += 1;
+        showNotification(`手札の上限を${handLimit}枚に拡張しました！`);
+        updateGameBoard();
+    } else {
+        showNotification('研究費が不足しています。', 'error');
+    }
 }
 
 // CSSも追加
@@ -692,6 +745,32 @@ const styles = `
 
 #difficulty-select button:hover {
     background-color: #e0e0e0;
+}
+
+.hand-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.expand-hand-button {
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.expand-hand-button:hover {
+    background-color: #45a049;
+}
+
+.expand-hand-button.disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 `;
 
