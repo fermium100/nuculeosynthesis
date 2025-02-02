@@ -258,6 +258,10 @@ let selectedElementIndices = [];
 // 現在使用中のアクションカードのインデックス
 let currentActionCardIndex = null;
 
+// 通知を管理するためのグローバル変数を追加
+let notifications = [];
+let notificationCounter = 0;
+
 // 初期手札を5枚引く
 for (let i = 0; i < 5; i++) {
     drawActionCard();
@@ -581,29 +585,66 @@ function grantFunding() {
 
 // 通知を表示する関数を修正
 function showNotification(message, type = 'success') {
-    const banner = document.getElementById('notification-banner');
-    banner.textContent = message;
+    const notificationId = notificationCounter++;
     
-    // タイプに応じて色を変更
-    switch (type) {
-        case 'success':
-            banner.style.backgroundColor = '#4CAF50';
-            break;
-        case 'error':
-            banner.style.backgroundColor = '#f44336';
-            break;
-        case 'info':
-            banner.style.backgroundColor = '#2196F3';
-            break;
-    }
+    // 新しい通知要素を作成
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    notification.style.opacity = '0';
+    notification.style.background = 'none';
     
-    banner.style.display = 'block';
+    // タイプに応じて背景色を設定
+    requestAnimationFrame(() => {
+        switch (type) {
+            case 'success':
+                notification.style.backgroundColor = '#4CAF50';
+                break;
+            case 'error':
+                notification.style.backgroundColor = '#f44336';
+                break;
+            case 'info':
+                notification.style.backgroundColor = '#2196F3';
+                break;
+        }
+        notification.style.opacity = '1';
+    });
     
-    // 表示時間を延長
-    const displayTime = type === 'info' ? 8000 : 4000;  // 豆知識は8秒、その他は4秒
+    // 通知をコンテナに追加
+    const container = document.getElementById('notification-banner');
+    container.appendChild(notification);
+    
+    // 通知を配列に追加
+    notifications.push({
+        id: notificationId,
+        element: notification
+    });
+    
+    // 表示時間を設定
+    const displayTime = type === 'info' ? 8000 : 4000;
     setTimeout(() => {
-        banner.style.display = 'none';
+        removeNotification(notificationId);
     }, displayTime);
+}
+
+// 通知を削除する関数
+function removeNotification(id) {
+    const index = notifications.findIndex(n => n.id === id);
+    if (index !== -1) {
+        const notification = notifications[index].element;
+        notification.style.opacity = '0';
+        notification.addEventListener('transitionend', () => {
+            notification.remove();
+            notifications.splice(index, 1);
+        });
+    }
+}
+
+// 通知の位置を更新する関数を修正
+function updateNotificationPositions() {
+    notifications.forEach((notification) => {
+        notification.element.style.transform = 'translateY(0)';
+    });
 }
 
 // 元素を売却する関数
@@ -697,3 +738,53 @@ function resetGame() {
 
     updateGameBoard();
 }
+
+// ゲームの初期化時にスタイルを追加
+function initializeStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #notification-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            pointer-events: none;
+            background: none;
+        }
+
+        .notification {
+            position: relative;
+            padding: 10px 20px;
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+            min-width: 200px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: none;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // notification-banner要素を再作成
+    const oldBanner = document.getElementById('notification-banner');
+    if (oldBanner) {
+        oldBanner.remove();
+    }
+    const newBanner = document.createElement('div');
+    newBanner.id = 'notification-banner';
+    document.body.appendChild(newBanner);
+}
+
+// 既存のHTMLの notification-banner 要素を空にする
+document.getElementById('notification-banner').innerHTML = '';
+
+// スタイルの初期化を呼び出す
+initializeStyles();
