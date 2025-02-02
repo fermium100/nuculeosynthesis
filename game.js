@@ -196,11 +196,16 @@ document.getElementById('buy-action-card').addEventListener('click', () => {
     buyActionCard();
 });
 
-// 手札のカードを引く関数
+// アクションカードを引く関数
 function drawActionCard() {
+    if (playerHand.length >= 5) {
+        alert('手札が上限（5枚）に達しています。');
+        return false;
+    }
     const randomIndex = Math.floor(Math.random() * actionCards.length);
     const card = actionCards[randomIndex];
     playerHand.push(card);
+    return true;
 }
 
 // ゲームボードを更新する関数
@@ -237,32 +242,22 @@ function updateGameBoard() {
     });
     gameBoard.appendChild(fieldDiv);
 
-    // 手札のアクションカードを表示（カードをまとめて表示）
+    // 手札のアクションカードを表示（1枚ずつ表示）
     const handDiv = document.getElementById('hand');
     handDiv.innerHTML = '手札:';
     
-    // カードの出現回数をカウント
-    const cardCounts = {};
-    playerHand.forEach(card => {
-        cardCounts[card] = (cardCounts[card] || 0) + 1;
-    });
-
-    // カードをまとめて表示
-    Object.entries(cardCounts).forEach(([card, count]) => {
+    playerHand.forEach((card, index) => {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
-        cardDiv.innerText = `${card} x${count}`;
+        cardDiv.innerText = card;
         
-        // カードをクリックしたときの処理
-        cardDiv.addEventListener('click', () => {
-            // 最初に見つかったカードのインデックスを選択
-            const index = playerHand.indexOf(card);
-            selectActionCard(index);
-        });
-        
-        if (currentActionCardIndex !== null && playerHand[currentActionCardIndex] === card) {
+        if (currentActionCardIndex === index) {
             cardDiv.classList.add('selected');
         }
+        
+        cardDiv.addEventListener('click', () => {
+            selectActionCard(index);
+        });
         
         handDiv.appendChild(cardDiv);
     });
@@ -457,6 +452,10 @@ function sellElement(index) {
 // アクションカードを購入する関数
 function buyActionCard() {
     const actionCardCost = 50; // アクションカードの価格
+    if (playerHand.length >= 5) {
+        alert('手札が上限（5枚）に達しています。');
+        return;
+    }
     if (researchFunding >= actionCardCost) {
         researchFunding -= actionCardCost;
         drawActionCard();
