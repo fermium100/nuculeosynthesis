@@ -312,6 +312,12 @@ function setDifficulty(difficulty) {
 
     // ゲームボードを更新
     updateGameBoard();
+
+    // 手札関連の要素をリセット
+    const handCountElement = document.getElementById('hand-count');
+    const expandButton = document.getElementById('expand-hand-button');
+    handCountElement.setAttribute('data-hand-limit', '5');
+    expandButton.setAttribute('data-current-limit', '5');
 }
 
 // ゲームボードを更新
@@ -329,6 +335,7 @@ document.getElementById('buy-action-card').addEventListener('click', () => {
 
 // アクションカードを引く関数を修正
 function drawActionCard() {
+    // handLimitグローバル変数を使用して現在の手札上限をチェック
     if (playerHand.length >= handLimit) {
         showNotification(`手札が上限（${handLimit}枚）に達しています。`, 'error');
         return false;
@@ -433,24 +440,32 @@ function updateGameBoard() {
     const handInfoContainer = document.createElement('div');
     handInfoContainer.className = 'hand-info';
     
-    // 現在の手札数/上限を表示
-    const handCountDiv = document.createElement('div');
-    handCountDiv.innerText = `手札: ${playerHand.length}/${handLimit}`;
-    handInfoContainer.appendChild(handCountDiv);
+    // 手札数の表示を更新
+    const handCountElement = document.createElement('div');
+    handCountElement.id = 'hand-count';
+    handCountElement.innerText = `手札: ${playerHand.length}/${handLimit}`;
+    handCountElement.setAttribute('data-hand-limit', handLimit);
+    handInfoContainer.appendChild(handCountElement);
     
-    // 拡張ボタン（常に表示）
-    const expansionCost = getExpansionCost(handLimit);
+    // 拡張ボタンの状態を更新
     const expandButton = document.createElement('button');
+    expandButton.id = 'expand-hand-button';
     expandButton.className = 'expand-hand-button';
-    expandButton.innerText = `手札枠を拡張 (¥${expansionCost.toLocaleString()})`;
-    if (researchFunding >= expansionCost) {
-        expandButton.addEventListener('click', expandHandLimit);
+    expandButton.innerText = `手札枠を拡張 (¥${getExpansionCost(handLimit).toLocaleString()})`;
+    expandButton.setAttribute('data-current-limit', handLimit);
+    
+    // 拡張ボタンのイベントリスナーを設定
+    expandButton.addEventListener('click', expandHandLimit);
+    
+    if (researchFunding >= getExpansionCost(handLimit)) {
+        expandButton.disabled = false;
+        expandButton.classList.remove('disabled');
     } else {
         expandButton.disabled = true;
         expandButton.classList.add('disabled');
     }
-    handInfoContainer.appendChild(expandButton);
     
+    handInfoContainer.appendChild(expandButton);
     handDiv.appendChild(handInfoContainer);
 
     // 手札のカードを表示
@@ -754,8 +769,8 @@ function sellElement(index) {
 // アクションカードを購入する関数
 function buyActionCard() {
     const actionCardCost = 50;
-    if (playerHand.length >= 5) {
-        showNotification('手札が上限（5枚）に達しています。', 'error');
+    if (playerHand.length >= handLimit) {  // ここも handLimit を使用
+        showNotification(`手札が上限（${handLimit}枚）に達しています。`, 'error');
         return;
     }
     if (researchFunding >= actionCardCost) {
@@ -849,6 +864,12 @@ function resetGame() {
     currentActionCardIndex = null;
     selectedElementIndices = [];
     handLimit = 5;
+
+    // 手札関連の要素をリセット
+    const handCountElement = document.getElementById('hand-count');
+    const expandButton = document.getElementById('expand-hand-button');
+    handCountElement.setAttribute('data-hand-limit', '5');
+    expandButton.setAttribute('data-current-limit', '5');
 }
 
 // アクションカード処分関数を追加
@@ -875,10 +896,13 @@ function discardActionCard(index) {
 
 // 手札枠を拡張する関数を修正
 function expandHandLimit() {
-    const expansionCost = getExpansionCost(handLimit);
+    const currentLimit = handLimit;
+    const expansionCost = getExpansionCost(currentLimit);
+
     if (researchFunding >= expansionCost) {
         researchFunding -= expansionCost;
         handLimit += 1;
+        
         showNotification(`手札の上限を${handLimit}枚に拡張しました！`);
         updateGameBoard();
     } else {
@@ -1017,4 +1041,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('buy-action-card').addEventListener('click', buyActionCard);
     document.getElementById('reset-button').addEventListener('click', resetGame);
     initializeStyles(); // スタイルの初期化
+
+    // 手札拡張ボタンのイベントリスナーを設定
+    document.getElementById('expand-hand-button').addEventListener('click', expandHandLimit);
 });
