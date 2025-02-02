@@ -169,6 +169,82 @@ const actionCards = [
     '科研費獲得'
 ];
 
+// 豆知識の定義を追加
+const trivia = {
+    '中性子線照射': [
+        '中性子線照射は原子炉で新しい元素を作る方法の一つです。',
+        '中性子線照射により、ウランから新しい元素のプルトニウムが発見されました。',
+        '中性子を吸収した原子核は、不安定になりやすい性質があります。',
+        '原子力発電所では、制御された中性子線照射により核分裂反応を維持します。',
+        '中性子線は電荷を持たないため、原子核に近づきやすい特徴があります。',
+        '中性子線照射は、物質の性質を調べる研究にも使われています。',
+        '医療分野では、中性子線を使ったがん治療も研究されています。',
+        '自然界でも宇宙線による中性子線照射が起きています。',
+        '中性子線照射による突然変異は、品種改良にも利用されています。',
+        '中性子線は物質を透過しやすい性質があります。'
+    ],
+    'α崩壊': [
+        'α崩壊ではヘリウム原子核（α粒子）が放出されます。',
+        'α崩壊は重い原子核で自然に起こる現象です。',
+        'α線は紙一枚で遮断できるほど透過力が弱いです。',
+        'ラジウムの発見は、α崩壊の研究から始まりました。',
+        'α崩壊では原子番号が2つ減少します。',
+        '質量数は4つ減少します。',
+        'α崩壊は放射性元素の半減期に関係します。',
+        'α線は電離作用が強い特徴があります。',
+        '自然界に存在するラドンは、α崩壊を起こします。',
+        'α崩壊は核図表で予測可能です。'
+    ],
+    '核融合': [
+        '核融合は太陽がエネルギーを生み出す仕組みです。',
+        '核融合には超高温（1億度以上）が必要です。',
+        '水素の核融合でヘリウムが生まれます。',
+        '核融合は、原子力発電の次世代エネルギーとして期待されています。',
+        'ITERは国際核融合実験炉のプロジェクトです。',
+        '核融合では質量が減少し、エネルギーに変換されます。',
+        '地球上で最初の核融合実験は1950年代に行われました。',
+        '核融合は宇宙の元素合成の主要なプロセスです。',
+        '核融合炉の実用化には、プラズマの制御が課題です。',
+        '重水素と三重水素の核融合が、最も起こりやすいとされています。'
+    ],
+    '核分裂': [
+        '核分裂は原子力発電所でエネルギーを取り出す原理です。',
+        'ウラン235は核分裂を起こしやすい元素です。',
+        '核分裂では中性子が放出され、連鎖反応が起こります。',
+        '制御された核分裂反応により、安定したエネルギー供給が可能です。',
+        '核分裂は1938年にドイツで発見されました。',
+        '核分裂では質量欠損によりエネルギーが放出されます。',
+        '原子炉では減速材を使って中性子の速度を制御します。',
+        '核分裂生成物には放射性物質が含まれます。',
+        '核分裂の制御には制御棒が使用されます。',
+        '自然界でも核分裂は起きています（オクロ天然原子炉）。'
+    ],
+    '元素ガチャ': [
+        '周期表は1869年にメンデレーエフにより提案されました。',
+        '現在確認されている最も重い元素は原子番号118のオガネソンです。',
+        '人工元素は原子番号95以降のすべての元素です。',
+        '希少元素のレアアースは、現代技術に不可欠です。',
+        '元素記号は世界共通の科学言語です。',
+        '日本人の名前が付いた元素はニホニウム（Nh）です。',
+        '周期表は元素の性質の周期性を示しています。',
+        '超重元素は非常に不安定で、すぐに崩壊します。',
+        '元素の周期表は、化学の発展に大きく貢献しました。',
+        '新元素の発見には加速器が使用されます。'
+    ],
+    '科研費獲得': [
+        '科研費は日本の学術研究を支える重要な研究費です。',
+        '科研費の採択率は約30%程度です。',
+        '若手研究者向けの研究費カテゴリーもあります。',
+        '科研費は1939年に設立された制度です。',
+        '科研費は競争的研究資金の代表例です。',
+        '年間予算は約2,000億円規模です。',
+        '科研費は基礎研究を支援する重要な制度です。',
+        '研究成果は一般公開が原則です。',
+        '国際共同研究も支援対象です。',
+        '分野を問わず幅広い研究を支援しています。'
+    ]
+};
+
 // プレイヤーの手札と場
 let playerHand = [];
 let playerField = [{ number: 1, symbol: 'H', price: 1 }]; // 初期は水素
@@ -181,6 +257,10 @@ let selectedElementIndices = [];
 
 // 現在使用中のアクションカードのインデックス
 let currentActionCardIndex = null;
+
+// 通知を管理するためのグローバル変数を追加
+let notifications = [];
+let notificationCounter = 0;
 
 // 難易度設定
 let currentDifficulty = 'hard'; // デフォルトはハードモード
@@ -426,6 +506,7 @@ function getRequiredSelections(cardName) {
 function playActionCard() {
     const card = playerHand[currentActionCardIndex];
 
+    // アクションの実行
     switch (card) {
         case '中性子線照射':
             neutronIrradiation(selectedElementIndices[0]);
@@ -448,6 +529,12 @@ function playActionCard() {
         default:
             alert('未知のアクションカードです。');
             return;
+    }
+
+    // 豆知識の表示
+    if (trivia[card]) {
+        const randomTrivia = trivia[card][Math.floor(Math.random() * trivia[card].length)];
+        showNotification(`豆知識: ${randomTrivia}`, 'info');
     }
 
     // 使用したアクションカードを手札から削除
@@ -531,17 +618,77 @@ function grantFunding() {
     showNotification(`研究費を${fundingAmount}獲得しました。`);
 }
 
-// 通知を表示する関数
+// 通知を表示する関数を修正
 function showNotification(message, type = 'success') {
-    const banner = document.getElementById('notification-banner');
-    banner.textContent = message;
-    banner.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
-    banner.style.display = 'block';
+    const notificationId = notificationCounter++;
     
-    // 2秒後に通知を消す
+    // 新しい通知要素を作成
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    notification.style.opacity = '0';
+    notification.style.background = 'none';
+    
+    // タイプに応じて背景色を設定
+    requestAnimationFrame(() => {
+        switch (type) {
+            case 'success':
+                notification.style.backgroundColor = '#4CAF50';
+                break;
+            case 'error':
+                notification.style.backgroundColor = '#f44336';
+                break;
+            case 'info':
+                notification.style.backgroundColor = '#2196F3';
+                break;
+        }
+        notification.style.opacity = '1';
+    });
+    
+    // 通知をコンテナに追加
+    const container = document.getElementById('notification-banner');
+    container.appendChild(notification);
+    
+    // 通知を配列に追加
+    notifications.push({
+        id: notificationId,
+        element: notification
+    });
+    
+    // 表示時間を設定
+    const displayTime = type === 'info' ? 8000 : 4000;
     setTimeout(() => {
-        banner.style.display = 'none';
-    }, 2000);
+        removeNotification(notificationId);
+    }, displayTime);
+}
+
+// 通知を削除する関数を修正
+function removeNotification(id) {
+    const index = notifications.findIndex(n => n.id === id);
+    if (index !== -1) {
+        const notification = notifications[index].element;
+        notification.style.opacity = '0';
+        notification.style.marginBottom = '0';
+        notification.style.maxHeight = '0';
+        notifications.splice(index, 1);
+        updateNotificationPositions();
+        
+        notification.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'opacity') {
+                notification.remove();
+            }
+        });
+    }
+}
+
+// 通知の位置を更新する関数を修正
+function updateNotificationPositions() {
+    let currentOffset = 0;
+    notifications.forEach((notification) => {
+        const height = notification.element.offsetHeight;
+        notification.element.style.transform = `translateY(-${currentOffset}px)`;
+        currentOffset += height + 10; // 10はmargin-bottom
+    });
 }
 
 // 元素を売却する関数
@@ -660,6 +807,59 @@ function discardActionCard(index) {
     
     updateGameBoard();
 }
+
+// ゲームの初期化時にスタイルを追加
+function initializeStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #notification-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            pointer-events: none;
+            background: none;
+        }
+
+        .notification {
+            position: relative;
+            padding: 10px 20px;
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+            min-width: 200px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: none;
+            max-height: 100px;
+            overflow: hidden;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // notification-banner要素を再作成
+    const oldBanner = document.getElementById('notification-banner');
+    if (oldBanner) {
+        oldBanner.remove();
+    }
+    const newBanner = document.createElement('div');
+    newBanner.id = 'notification-banner';
+    document.body.appendChild(newBanner);
+}
+
+// 既存のHTMLの notification-banner 要素を空にする
+document.getElementById('notification-banner').innerHTML = '';
+
+// スタイルの初期化を呼び出す
+initializeStyles();
+
 
 // CSSも追加
 const styles = `
