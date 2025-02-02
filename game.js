@@ -472,23 +472,36 @@ function elementGacha() {
 function grantFunding() {
     const fundingAmount = 250; // 科研費獲得で得られる研究費
     researchFunding += fundingAmount;
-    alert(`研究費を${fundingAmount}獲得しました。`);
+    showNotification(`研究費を${fundingAmount}獲得しました。`);
+}
+
+// 通知を表示する関数
+function showNotification(message, type = 'success') {
+    const banner = document.getElementById('notification-banner');
+    banner.textContent = message;
+    banner.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+    banner.style.display = 'block';
+    
+    // 2秒後に通知を消す
+    setTimeout(() => {
+        banner.style.display = 'none';
+    }, 2000);
 }
 
 // 元素を売却する関数
 function sellElement(index) {
     const element = playerField[index];
     researchFunding += element.price;
-    alert(`${element.symbol}を売却して、${element.price}の研究費を得ました。`);
-    playerField.splice(index, 1);
+    playerField.splice(index, index + 1);
+    showNotification(`研究費 ${element.price} を獲得しました！`);
     updateGameBoard();
 }
 
 // アクションカードを購入する関数
 function buyActionCard() {
-    const actionCardCost = 50; // アクションカードの価格
+    const actionCardCost = 50;
     if (playerHand.length >= 5) {
-        alert('手札が上限（5枚）に達しています。');
+        showNotification('手札が上限（5枚）に達しています。', 'error');
         return;
     }
     if (researchFunding >= actionCardCost) {
@@ -496,7 +509,7 @@ function buyActionCard() {
         drawActionCard();
         updateGameBoard();
     } else {
-        alert('研究費が不足しています。');
+        showNotification('研究費が不足しています。', 'error');
     }
 }
 
