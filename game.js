@@ -289,17 +289,29 @@ function getExpansionCost(currentLimit) {
 // 難易度設定関数を修正
 function setDifficulty(difficulty) {
     currentDifficulty = difficulty;
+    
     // 難易度選択画面を非表示に
     document.getElementById('difficulty-select').style.display = 'none';
+    
     // ゲームボードとリセットボタンを表示
     document.getElementById('game-board').style.display = 'block';
     document.getElementById('reset-container').style.display = 'block';
-    resetGame();
-}
+    
+    // ゲーム状態の初期化
+    playerHand = [];
+    playerField = [{ number: 1, symbol: 'H', price: 10 }];
+    researchFunding = INITIAL_FUNDING[difficulty];
+    currentActionCardIndex = null;
+    selectedElementIndices = [];
+    handLimit = 5;
 
-// 初期手札を5枚引く
-for (let i = 0; i < 5; i++) {
-    drawActionCard();
+    // 初期手札を5枚引く
+    for (let i = 0; i < 5; i++) {
+        drawActionCard();
+    }
+
+    // ゲームボードを更新
+    updateGameBoard();
 }
 
 // ゲームボードを更新
@@ -811,19 +823,32 @@ function resetGame() {
         }
     }
 
+    // 全ての画面要素を一旦非表示に
+    document.getElementById('game-board').style.display = 'none';
+    document.getElementById('reset-container').style.display = 'none';
+    
+    // 難易度選択画面を表示
+    const difficultySelect = document.getElementById('difficulty-select');
+    difficultySelect.style.display = 'block';
+
+    // 難易度選択ボタンのイベントリスナーを再設定
+    const buttons = difficultySelect.getElementsByTagName('button');
+    for (let button of buttons) {
+        const difficulty = button.getAttribute('data-difficulty');
+        // 既存のイベントリスナーを削除（重複防止）
+        button.replaceWith(button.cloneNode(true));
+        // 新しいイベントリスナーを追加
+        difficultySelect.querySelector(`[data-difficulty="${difficulty}"]`)
+            .addEventListener('click', () => setDifficulty(difficulty));
+    }
+
+    // ゲーム状態のリセット
     playerHand = [];
     playerField = [{ number: 1, symbol: 'H', price: 10 }];
     researchFunding = INITIAL_FUNDING[currentDifficulty];
     currentActionCardIndex = null;
     selectedElementIndices = [];
-    handLimit = 5; // 手札の上限をリセット
-
-    // 手札を5枚引く
-    for (let i = 0; i < 5; i++) {
-        drawActionCard();
-    }
-
-    updateGameBoard();
+    handLimit = 5;
 }
 
 // アクションカード処分関数を追加
@@ -977,3 +1002,19 @@ const styles = `
 const styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
+
+// DOMContentLoadedイベントリスナーの中で
+document.addEventListener('DOMContentLoaded', function() {
+    // 難易度選択ボタンのイベントリスナーを設定
+    const difficultySelect = document.getElementById('difficulty-select');
+    const buttons = difficultySelect.getElementsByTagName('button');
+    for (let button of buttons) {
+        const difficulty = button.getAttribute('data-difficulty');
+        button.addEventListener('click', () => setDifficulty(difficulty));
+    }
+
+    // その他の初期化処理
+    document.getElementById('buy-action-card').addEventListener('click', buyActionCard);
+    document.getElementById('reset-button').addEventListener('click', resetGame);
+    initializeStyles(); // スタイルの初期化
+});
