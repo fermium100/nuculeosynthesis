@@ -1115,13 +1115,12 @@ class NotificationManager {
                 top: 20px;
                 right: 20px;
                 z-index: 1000;
-                display: flex;
-                flex-direction: column;
-                gap: 24px;
                 pointer-events: none;
             }
 
             .notification {
+                position: absolute;
+                right: 0;
                 background-color: #333;
                 color: white;
                 padding: 10px 20px;
@@ -1130,8 +1129,9 @@ class NotificationManager {
                 max-width: 400px;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                 opacity: 1;
-                transition: opacity 0.3s ease;
+                transition: all 0.3s ease;
                 pointer-events: auto;
+                transform: translateY(0);
             }
 
             .notification.dissolving {
@@ -1144,6 +1144,16 @@ class NotificationManager {
         container.className = 'notification-container';
         document.body.appendChild(container);
         this.container = container;
+    }
+
+    updatePositions() {
+        let currentOffset = 0;
+        this.notifications.forEach(notification => {
+            if (!notification.isDissolving) {
+                notification.element.style.transform = `translateY(${currentOffset}px)`;
+                currentOffset += notification.element.offsetHeight + 24; // 24pxは通知間の間隔
+            }
+        });
     }
 
     show(message, type = 'normal') {
@@ -1162,14 +1172,34 @@ class NotificationManager {
         element.style.backgroundColor = config.color;
         const expireAt = Date.now() + config.duration;
 
+        // 初期位置を設定
+        element.style.transform = `translateY(${this.getTotalHeight()}px)`;
         this.container.appendChild(element);
-        this.notifications.push({ 
-            id, 
-            element, 
+
+        const notification = {
+            id,
+            element,
             expireAt,
             isDissolving: false,
             timeoutId: setTimeout(() => this.remove(id), config.duration)
+        };
+
+        this.notifications.push(notification);
+
+        // 要素が追加された後に位置を更新
+        requestAnimationFrame(() => {
+            this.updatePositions();
         });
+    }
+
+    getTotalHeight() {
+        let height = 0;
+        this.notifications.forEach(notification => {
+            if (!notification.isDissolving) {
+                height += notification.element.offsetHeight + 24;
+            }
+        });
+        return height;
     }
 
     remove(id) {
@@ -1179,7 +1209,6 @@ class NotificationManager {
         const notification = this.notifications[index];
         if (notification.isDissolving) return;
 
-        // タイムアウトをクリア
         if (notification.timeoutId) {
             clearTimeout(notification.timeoutId);
         }
@@ -1187,47 +1216,41 @@ class NotificationManager {
         notification.isDissolving = true;
         notification.element.classList.add('dissolving');
 
-        // トランジション完了後に要素を削除
-        notification.element.addEventListener('transitionend', () => {
-            if (notification.element.parentNode) {
-                notification.element.remove();
-            }
-            const currentIndex = this.notifications.findIndex(n => n.id === id);
-            if (currentIndex !== -1) {
-                this.notifications.splice(currentIndex, 1);
+        notification.element.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'opacity') {
+                if (notification.element.parentNode) {
+                    notification.element.remove();
+                }
+                const currentIndex = this.notifications.findIndex(n => n.id === id);
+                if (currentIndex !== -1) {
+                    this.notifications.splice(currentIndex, 1);
+                }
+                // 要素が削除された後に位置を更新
+                this.updatePositions();
             }
         }, { once: true });
+
+        // 即座に位置更新を開始
+        this.updatePositions();
     }
 
     startPeriodicCleanup() {
         setInterval(() => {
             const now = Date.now();
-            // 期限切れの通知を配列の後ろから処理
             for (let i = this.notifications.length - 1; i >= 0; i--) {
                 const notification = this.notifications[i];
-                // 期限切れかつ dissolving フラグが立っていない通知を処理
                 if (notification.expireAt <= now && !notification.isDissolving) {
                     this.remove(notification.id);
                 }
-                // 長時間残っている通知を強制的に削除（フェールセーフ）
                 else if (notification.expireAt <= now - 10000) {
                     if (notification.element.parentNode) {
                         notification.element.remove();
                     }
                     this.notifications.splice(i, 1);
+                    this.updatePositions();
                 }
             }
         }, 1000);
-    }
-
-    // デバッグ用のメソッド
-    getActiveNotifications() {
-        return this.notifications.map(n => ({
-            id: n.id,
-            expireAt: n.expireAt,
-            isDissolving: n.isDissolving,
-            timeRemaining: n.expireAt - Date.now()
-        }));
     }
 }
 
