@@ -237,19 +237,33 @@ function updateGameBoard() {
     });
     gameBoard.appendChild(fieldDiv);
 
-    // 手札のアクションカードを表示
+    // 手札のアクションカードを表示（カードをまとめて表示）
     const handDiv = document.getElementById('hand');
     handDiv.innerHTML = '手札:';
-    playerHand.forEach((card, index) => {
+    
+    // カードの出現回数をカウント
+    const cardCounts = {};
+    playerHand.forEach(card => {
+        cardCounts[card] = (cardCounts[card] || 0) + 1;
+    });
+
+    // カードをまとめて表示
+    Object.entries(cardCounts).forEach(([card, count]) => {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
-        if (currentActionCardIndex === index) {
-            cardDiv.classList.add('selected');
-        }
-        cardDiv.innerText = card;
+        cardDiv.innerText = `${card} x${count}`;
+        
+        // カードをクリックしたときの処理
         cardDiv.addEventListener('click', () => {
+            // 最初に見つかったカードのインデックスを選択
+            const index = playerHand.indexOf(card);
             selectActionCard(index);
         });
+        
+        if (currentActionCardIndex !== null && playerHand[currentActionCardIndex] === card) {
+            cardDiv.classList.add('selected');
+        }
+        
         handDiv.appendChild(cardDiv);
     });
 
