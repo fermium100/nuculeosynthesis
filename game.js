@@ -196,14 +196,31 @@ document.getElementById('buy-action-card').addEventListener('click', () => {
     buyActionCard();
 });
 
-// アクションカードを引く関数
+// アクションカードを引く関数を修正
 function drawActionCard() {
     if (playerHand.length >= 5) {
-        alert('手札が上限（5枚）に達しています。');
+        showNotification('手札が上限（5枚）に達しています。', 'error');
         return false;
     }
-    const randomIndex = Math.floor(Math.random() * actionCards.length);
-    const card = actionCards[randomIndex];
+
+    // 各アクションカードの所持数をカウント
+    const cardCounts = {};
+    playerHand.forEach(card => {
+        cardCounts[card] = (cardCounts[card] || 0) + 1;
+    });
+
+    // 3枚未満のカードのみを抽選対象にする
+    const availableCards = actionCards.filter(card => 
+        !cardCounts[card] || cardCounts[card] < 3
+    );
+
+    if (availableCards.length === 0) {
+        showNotification('これ以上獲得可能なカードがありません。', 'error');
+        return false;
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableCards.length);
+    const card = availableCards[randomIndex];
     playerHand.push(card);
     return true;
 }
@@ -418,7 +435,7 @@ function alphaDecay(index) {
     let element = playerField[index];
     element.number -= 2;
     if (element.number < 1) {
-        alert('元素が消滅しました。');
+        showNotification('元素が消滅しました。', 'error');
         playerField.splice(index, 1);
     } else {
         element.symbol = getElementSymbol(element.number);
@@ -434,7 +451,7 @@ function nuclearFusion(index1, index2) {
     const newPrice = getElementPrice(newAtomicNumber);
 
     if (!newSymbol) {
-        alert('核融合に失敗しました。元素が不安定です。');
+        showNotification('核融合に失敗しました。元素が不安定です。', 'error');
     } else {
         playerField.push({ number: newAtomicNumber, symbol: newSymbol, price: newPrice });
     }
@@ -446,7 +463,7 @@ function nuclearFission(index) {
     const element = playerField[index];
     const combinations = getFissionCombinations(element.number);
     if (combinations.length === 0) {
-        alert('核分裂できる組み合わせがありません。');
+        showNotification('核分裂できる組み合わせがありません。', 'error');
         return;
     }
     const randomIndex = Math.floor(Math.random() * combinations.length);
