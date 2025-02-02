@@ -680,18 +680,46 @@ function grantFunding() {
     showNotification(`研究費を${fundingAmount}獲得しました。`);
 }
 
+// 通知を削除する関数を修正
+function removeNotification(id) {
+    const index = notifications.findIndex(n => n.id === id);
+    if (index !== -1) {
+        const notification = notifications[index].element;
+        
+        notification.style.opacity = '0';
+        
+        notification.addEventListener('transitionend', function handler(e) {
+            if (e.propertyName === 'opacity') {
+                notification.removeEventListener('transitionend', handler);
+                notification.remove();
+                notifications.splice(index, 1);
+                
+                // 残りの通知を1つずつ上に移動（隙間を含む）
+                notifications.forEach((n, i) => {
+                    const yOffset = i * 85; // 60px + 25px の隙間
+                    n.element.style.transform = `translateY(${yOffset}px)`;
+                });
+            }
+        });
+    }
+}
+
 // 通知を表示する関数を修正
-function showNotification(message, type = 'success') {
+function showNotification(message, type = 'normal') {
     const notificationId = notificationCounter++;
+    const displayTime = type === 'info' ? 8000 : 4000;
+    const expire_at = Date.now() + displayTime;
     
-    // 新しい通知要素を作成
+    const wrapper = document.createElement('div');
+    wrapper.className = 'notification-wrapper';
+    wrapper.style.opacity = '0';
+    
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
-    notification.style.opacity = '0';
-    notification.style.background = 'none';
     
-    // タイプに応じて背景色を設定
+    wrapper.appendChild(notification);
+    
     requestAnimationFrame(() => {
         switch (type) {
             case 'success':
@@ -704,54 +732,73 @@ function showNotification(message, type = 'success') {
                 notification.style.backgroundColor = '#2196F3';
                 break;
         }
-        notification.style.opacity = '1';
+        wrapper.style.opacity = '1';
     });
     
-    // 通知をコンテナに追加
     const container = document.getElementById('notification-banner');
-    container.appendChild(notification);
+    container.appendChild(wrapper);
     
-    // 通知を配列に追加
     notifications.push({
         id: notificationId,
-        element: notification
+        element: wrapper,
+        expire_at: expire_at,
+        removing: false
     });
     
-    // 表示時間を設定
-    const displayTime = type === 'info' ? 8000 : 4000;
     setTimeout(() => {
-        removeNotification(notificationId);
+        removeExpiredNotifications();
     }, displayTime);
 }
 
-// 通知を削除する関数を修正
-function removeNotification(id) {
-    const index = notifications.findIndex(n => n.id === id);
-    if (index !== -1) {
-        const notification = notifications[index].element;
-        notification.style.opacity = '0';
-        notification.style.marginBottom = '0';
-        notification.style.maxHeight = '0';
-        notifications.splice(index, 1);
-        updateNotificationPositions();
+// 期限切れの通知を削除する関数を改善
+function removeExpiredNotifications() {
+    const currentTime = Date.now();
+    const expiredIndices = [];
+    
+    notifications.forEach((notification, index) => {
+        if (notification.expire_at <= currentTime && !notification.removing) {
+            expiredIndices.push(index);
+        }
+    });
+    
+    expiredIndices.sort((a, b) => b - a).forEach(index => {
+        const notification = notifications[index];
+        notification.removing = true;
         
-        notification.addEventListener('transitionend', (e) => {
+        notification.element.style.opacity = '0';
+        
+        notification.element.addEventListener('transitionend', function handler(e) {
             if (e.propertyName === 'opacity') {
-                notification.remove();
+                notification.element.removeEventListener('transitionend', handler);
+                notification.element.remove();
+                
+                const currentIndex = notifications.findIndex(n => n.id === notification.id);
+                if (currentIndex !== -1) {
+                    notifications.splice(currentIndex, 1);
+                }
             }
         });
-    }
-}
-
-// 通知の位置を更新する関数を修正
-function updateNotificationPositions() {
-    let currentOffset = 0;
-    notifications.forEach((notification) => {
-        const height = notification.element.offsetHeight;
-        notification.element.style.transform = `translateY(-${currentOffset}px)`;
-        currentOffset += height + 10; // 10はmargin-bottom
     });
 }
+
+// 定期的なクリーンアップを追加
+setInterval(() => {
+    // 長時間残っている通知を強制的に削除
+    const currentTime = Date.now();
+    notifications = notifications.filter(notification => {
+        if (notification.expire_at <= currentTime - 10000) { // 期限から10秒以上経過
+            notification.element.remove();
+            return false;
+        }
+        return true;
+    });
+    
+    // 位置を更新
+    notifications.forEach((n, i) => {
+        const yOffset = i * 60;
+        n.element.style.transform = `translateY(${yOffset}px)`;
+    });
+}, 5000); // 5秒ごとにチェック
 
 // 元素を売却する関数
 function sellElement(index) {
@@ -914,43 +961,43 @@ function expandHandLimit() {
     }
 }
 
-// ゲームの初期化時にスタイルを追加
+// スタイルを更新
 function initializeStyles() {
     const style = document.createElement('style');
     style.textContent = `
         #notification-banner {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 20px;
+            right: 20px;
             z-index: 1000;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
             pointer-events: none;
             background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;  /* 通知間の隙間を設定 */
+        }
+
+        .notification-wrapper {
+            position: relative;
+            width: 100%;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
         }
 
         .notification {
-            position: relative;
             padding: 10px 20px;
             border-radius: 4px;
             color: white;
-            text-align: center;
+            text-align: left;
             min-width: 200px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-            opacity: 0;
-            pointer-events: auto;
+            max-width: 400px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            background: none;
-            max-height: 100px;
-            overflow: hidden;
+            word-wrap: break-word;
         }
     `;
     document.head.appendChild(style);
 
-    // notification-banner要素を再作成
     const oldBanner = document.getElementById('notification-banner');
     if (oldBanner) {
         oldBanner.remove();
@@ -1051,3 +1098,143 @@ document.addEventListener('DOMContentLoaded', function() {
     // 手札拡張ボタンのイベントリスナーを設定
     document.getElementById('expand-hand-button').addEventListener('click', expandHandLimit);
 });
+
+class NotificationManager {
+    constructor() {
+        this.notifications = [];
+        this.counter = 0;
+        this.initializeContainer();
+        this.startPeriodicCleanup();
+    }
+
+    initializeContainer() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+                pointer-events: none;
+            }
+
+            .notification {
+                background-color: #333;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 4px;
+                min-width: 200px;
+                max-width: 400px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                opacity: 1;
+                transition: opacity 0.3s ease;
+                pointer-events: auto;
+            }
+
+            .notification.dissolving {
+                opacity: 0;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+        this.container = container;
+    }
+
+    show(message, type = 'normal') {
+        const id = this.counter++;
+        const element = document.createElement('div');
+        element.className = 'notification';
+        element.textContent = message;
+
+        const config = {
+            normal: { duration: 4000, color: '#333' },
+            success: { duration: 4000, color: '#4CAF50' },
+            error: { duration: 4000, color: '#f44336' },
+            info: { duration: 8000, color: '#2196F3' }
+        }[type] || config.normal;
+
+        element.style.backgroundColor = config.color;
+        const expireAt = Date.now() + config.duration;
+
+        this.container.appendChild(element);
+        this.notifications.push({ 
+            id, 
+            element, 
+            expireAt,
+            isDissolving: false,
+            timeoutId: setTimeout(() => this.remove(id), config.duration)
+        });
+    }
+
+    remove(id) {
+        const index = this.notifications.findIndex(n => n.id === id);
+        if (index === -1) return;
+
+        const notification = this.notifications[index];
+        if (notification.isDissolving) return;
+
+        // タイムアウトをクリア
+        if (notification.timeoutId) {
+            clearTimeout(notification.timeoutId);
+        }
+
+        notification.isDissolving = true;
+        notification.element.classList.add('dissolving');
+
+        // トランジション完了後に要素を削除
+        notification.element.addEventListener('transitionend', () => {
+            if (notification.element.parentNode) {
+                notification.element.remove();
+            }
+            const currentIndex = this.notifications.findIndex(n => n.id === id);
+            if (currentIndex !== -1) {
+                this.notifications.splice(currentIndex, 1);
+            }
+        }, { once: true });
+    }
+
+    startPeriodicCleanup() {
+        setInterval(() => {
+            const now = Date.now();
+            // 期限切れの通知を配列の後ろから処理
+            for (let i = this.notifications.length - 1; i >= 0; i--) {
+                const notification = this.notifications[i];
+                // 期限切れかつ dissolving フラグが立っていない通知を処理
+                if (notification.expireAt <= now && !notification.isDissolving) {
+                    this.remove(notification.id);
+                }
+                // 長時間残っている通知を強制的に削除（フェールセーフ）
+                else if (notification.expireAt <= now - 10000) {
+                    if (notification.element.parentNode) {
+                        notification.element.remove();
+                    }
+                    this.notifications.splice(i, 1);
+                }
+            }
+        }, 1000);
+    }
+
+    // デバッグ用のメソッド
+    getActiveNotifications() {
+        return this.notifications.map(n => ({
+            id: n.id,
+            expireAt: n.expireAt,
+            isDissolving: n.isDissolving,
+            timeRemaining: n.expireAt - Date.now()
+        }));
+    }
+}
+
+// グローバルなNotificationManagerのインスタンスを作成
+const notificationManager = new NotificationManager();
+
+// showNotification関数を新しいマネージャーを使用するように更新
+function showNotification(message, type = 'normal') {
+    notificationManager.show(message, type);
+}
