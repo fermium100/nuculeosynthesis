@@ -192,9 +192,14 @@ const INITIAL_FUNDING = {
     hard: 100
 };
 
-// 難易度設定関数
+// 難易度設定関数を修正
 function setDifficulty(difficulty) {
     currentDifficulty = difficulty;
+    // 難易度選択画面を非表示に
+    document.getElementById('difficulty-select').style.display = 'none';
+    // ゲームボードとリセットボタンを表示
+    document.getElementById('game-board').style.display = 'block';
+    document.getElementById('reset-container').style.display = 'block';
     resetGame();
 }
 
@@ -613,6 +618,13 @@ function showResetButton() {
 }
 
 function resetGame() {
+    // リセット時の確認（ただし初回のゲーム開始時は確認しない）
+    if (playerHand.length > 0 || playerField.length > 1 || researchFunding !== INITIAL_FUNDING[currentDifficulty]) {
+        if (!confirm('本当にリセットしますか？\nゲームの進行状況がすべて失われます。')) {
+            return;
+        }
+    }
+
     playerHand = [];
     playerField = [{ number: 1, symbol: 'H', price: 10 }];
     researchFunding = INITIAL_FUNDING[currentDifficulty];
@@ -624,7 +636,6 @@ function resetGame() {
         drawActionCard();
     }
 
-    document.getElementById('reset-button').style.display = 'none';
     updateGameBoard();
 }
 
@@ -638,7 +649,7 @@ function discardActionCard(index) {
 
     researchFunding -= discardCost;
     playerHand.splice(index, 1);
-    showNotification(`アクションカードを${discardCost}円で処分しました。`);
+    showNotification(`アクションカードを${discardCost}で処分しました。`);
     
     if (currentActionCardIndex === index) {
         currentActionCardIndex = null;
