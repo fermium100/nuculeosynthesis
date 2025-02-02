@@ -247,7 +247,7 @@ const trivia = {
 
 // プレイヤーの手札と場
 let playerHand = [];
-let playerField = [{ number: 1, symbol: 'H', price: 10 }]; // 初期は水素
+let playerField = [{ number: 1, symbol: 'H', price: 1 }]; // 初期は水素
 
 // 研究費
 let researchFunding = 100;
@@ -261,6 +261,27 @@ let currentActionCardIndex = null;
 // 通知を管理するためのグローバル変数を追加
 let notifications = [];
 let notificationCounter = 0;
+
+// 難易度設定
+let currentDifficulty = 'hard'; // デフォルトはハードモード
+
+// 難易度に応じた初期研究費を設定
+const INITIAL_FUNDING = {
+    easy: 10000,
+    normal: 1000,
+    hard: 100
+};
+
+// 難易度設定関数を修正
+function setDifficulty(difficulty) {
+    currentDifficulty = difficulty;
+    // 難易度選択画面を非表示に
+    document.getElementById('difficulty-select').style.display = 'none';
+    // ゲームボードとリセットボタンを表示
+    document.getElementById('game-board').style.display = 'block';
+    document.getElementById('reset-container').style.display = 'block';
+    resetGame();
+}
 
 // 初期手札を5枚引く
 for (let i = 0; i < 5; i++) {
@@ -378,11 +399,14 @@ function updateGameBoard() {
     });
     gameBoard.appendChild(fieldDiv);
 
-    // 手札のアクションカードを表示（1枚ずつ表示）
+    // 手札のアクションカードを表示
     const handDiv = document.getElementById('hand');
     handDiv.innerHTML = '手札:';
     
     playerHand.forEach((card, index) => {
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'card-container';
+        
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         cardDiv.innerText = card;
@@ -395,7 +419,18 @@ function updateGameBoard() {
             selectActionCard(index);
         });
         
-        handDiv.appendChild(cardDiv);
+        // 処分ボタンを追加
+        const discardButton = document.createElement('button');
+        discardButton.className = 'discard-button';
+        discardButton.innerText = '処分';
+        discardButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            discardActionCard(index);
+        });
+        
+        cardContainer.appendChild(cardDiv);
+        cardContainer.appendChild(discardButton);
+        handDiv.appendChild(cardContainer);
     });
 
     // 敗北条件のチェック
@@ -730,10 +765,16 @@ function showResetButton() {
 }
 
 function resetGame() {
-    // 初期状態にリセット
+    // リセット時の確認（ただし初回のゲーム開始時は確認しない）
+    if (playerHand.length > 0 || playerField.length > 1 || researchFunding !== INITIAL_FUNDING[currentDifficulty]) {
+        if (!confirm('本当にリセットしますか？\nゲームの進行状況がすべて失われます。')) {
+            return;
+        }
+    }
+
     playerHand = [];
     playerField = [{ number: 1, symbol: 'H', price: 10 }];
-    researchFunding = 0;
+    researchFunding = INITIAL_FUNDING[currentDifficulty];
     currentActionCardIndex = null;
     selectedElementIndices = [];
 
@@ -742,9 +783,28 @@ function resetGame() {
         drawActionCard();
     }
 
-    // リセットボタンを隠す
-    document.getElementById('reset-button').style.display = 'none';
+    updateGameBoard();
+}
 
+// アクションカード処分関数を追加
+function discardActionCard(index) {
+    const discardCost = 100;
+    if (researchFunding < discardCost) {
+        showNotification('研究費が不足しています。', 'error');
+        return;
+    }
+
+    researchFunding -= discardCost;
+    playerHand.splice(index, 1);
+    showNotification(`アクションカードを${discardCost}で処分しました。`);
+    
+    if (currentActionCardIndex === index) {
+        currentActionCardIndex = null;
+        selectedElementIndices = [];
+    } else if (currentActionCardIndex > index) {
+        currentActionCardIndex--;
+    }
+    
     updateGameBoard();
 }
 
@@ -799,3 +859,43 @@ document.getElementById('notification-banner').innerHTML = '';
 
 // スタイルの初期化を呼び出す
 initializeStyles();
+
+
+// CSSも追加
+const styles = `
+.card-container {
+    display: inline-block;
+    margin: 5px;
+}
+
+.discard-button {
+    display: block;
+    margin-top: 5px;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.discard-button:hover {
+    background-color: #cc0000;
+}
+
+#difficulty-select button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#difficulty-select button:hover {
+    background-color: #e0e0e0;
+}
+`;
+
+// スタイルを適用
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);

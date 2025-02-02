@@ -9,13 +9,21 @@
     <h1>元素合成カードゲーム</h1>
     <div id="research-funding">研究費: 0</div>
     <button id="buy-action-card">アクションカードを購入 (50)</button>
-    <div id="game-board">
+    <div id="difficulty-select" style="text-align: center; margin: 20px 0;">
+        <h2>難易度を選択してください</h2>
+        <button onclick="setDifficulty('easy')">イージーモード</button>
+        <button onclick="setDifficulty('normal')">ノーマルモード</button>
+        <button onclick="setDifficulty('hard')">ハードモード</button>
+    </div>
+    <div id="game-board" style="display: none;">
         <!-- ゲームボードの内容がここに表示されます -->
     </div>
     <div id="hand">
         <!-- 手札のカードがここに表示されます -->
     </div>
-    <button id="reset-button" style="display: none;">ゲームをリセット</button>
+    <div id="reset-container" style="display: none; position: fixed; bottom: 20px; right: 20px;">
+        <button id="reset-button" class="reset-button">ゲームをリセット</button>
+    </div>
     <div id="notification-banner" class="notification-banner"></div>
     <script src="game.js"></script>
 </body>
