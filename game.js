@@ -579,7 +579,7 @@ function grantFunding() {
     showNotification(`研究費を${fundingAmount}獲得しました。`);
 }
 
-// 通知を表示する関数
+// 通知を表示する関数を修正
 function showNotification(message, type = 'success') {
     const banner = document.getElementById('notification-banner');
     banner.textContent = message;
@@ -599,8 +599,8 @@ function showNotification(message, type = 'success') {
     
     banner.style.display = 'block';
     
-    // 豆知識は4秒表示
-    const displayTime = type === 'info' ? 4000 : 2000;
+    // 表示時間を延長
+    const displayTime = type === 'info' ? 8000 : 4000;  // 豆知識は8秒、その他は4秒
     setTimeout(() => {
         banner.style.display = 'none';
     }, displayTime);
