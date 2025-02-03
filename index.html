@@ -16,20 +16,18 @@
     </div>
     <div id="game-board" style="display: none;">
         <!-- ゲームボードの内容がここに表示されます -->
+    </div>    
+    <div id="hand-controls"></div>
+        <div id="hand-count"></div>
+        <button id="expand-hand-button" class="expand-hand-button">手札枠拡張</button>
     </div>
-    <div id="hand">
-        <!-- 手札のカードがここに表示されます -->
+    <div id="action-cards-section">
+        <div id="hand"></div>
     </div>
     <div id="reset-container" style="display: none;">
         <button id="reset-button" class="reset-button">ゲームをリセット</button>
     </div>
     <div id="notification-banner" class="notification-banner"></div>
-    <div id="hand-info" style="display: none;">
-        <span id="hand-count" data-hand-limit="5">手札: 0/5</span>
-        <button id="expand-hand-button" class="expand-hand-button" data-current-limit="5">
-            手札枠を拡張 (¥1000)
-        </button>
-    </div>
     <script src="game.js"></script>
 </body>
 </html>

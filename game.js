@@ -483,30 +483,19 @@ function updateGameBoard() {
     fieldDiv.appendChild(elementsDiv);
     gameBoard.appendChild(fieldDiv);
 
-    // 手札の表示部分の前に拡張ボタンを追加
+    // 手札の表示部分をクリア
     const handDiv = document.getElementById('hand');
     handDiv.innerHTML = '';
     
-    // 手札の情報とボタンのコンテナ
-    const handInfoContainer = document.createElement('div');
-    handInfoContainer.className = 'hand-info';
-    
-    // 手札数の表示を更新
-    const handCountElement = document.createElement('div');
-    handCountElement.id = 'hand-count';
+    // 既存の手札情報を更新
+    const handCountElement = document.getElementById('hand-count');
     handCountElement.innerText = `手札: ${playerHand.length}/${handLimit}`;
     handCountElement.setAttribute('data-hand-limit', handLimit);
-    handInfoContainer.appendChild(handCountElement);
     
-    // 拡張ボタンの状態を更新
-    const expandButton = document.createElement('button');
-    expandButton.id = 'expand-hand-button';
-    expandButton.className = 'expand-hand-button';
+    // 既存の拡張ボタンを更新
+    const expandButton = document.getElementById('expand-hand-button');
     expandButton.innerText = `手札枠を拡張 (¥${getExpansionCost(handLimit).toLocaleString()})`;
     expandButton.setAttribute('data-current-limit', handLimit);
-    
-    // 拡張ボタンのイベントリスナーを設定
-    expandButton.addEventListener('click', expandHandLimit);
     
     if (researchFunding >= getExpansionCost(handLimit)) {
         expandButton.disabled = false;
@@ -515,9 +504,6 @@ function updateGameBoard() {
         expandButton.disabled = true;
         expandButton.classList.add('disabled');
     }
-    
-    handInfoContainer.appendChild(expandButton);
-    handDiv.appendChild(handInfoContainer);
 
     // 手札のカードを表示
     playerHand.forEach((card, index) => {
@@ -1046,6 +1032,51 @@ function expandHandLimit() {
 function initializeStyles() {
     const style = document.createElement('style');
     style.textContent += `
+        #game-board {
+            margin-bottom: 20px;
+        }
+
+        .elements-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+            margin-bottom: 20px;  /* 手札コントロールとの間隔 */
+        }
+
+        /* 手札コントロール（枚数表示と拡張ボタン）のコンテナ */
+        #hand-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 0 15px 20px 15px;  /* 上右下左のマージン */
+        }
+
+        /* 手札（アクションカード）のコンテナ */
+        #hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        /* スマートフォン向けの調整 */
+        @media (max-width: 768px) {
+            #hand-controls {
+                align-items: center;
+            }
+
+            #buy-action-card {
+                padding: 15px 30px;
+                font-size: 18px;
+                margin: 10px;
+            }
+        }
+
+        /* 以下は変更なし */
         .card-container {
             position: relative;
             margin: 10px;
@@ -1057,8 +1088,8 @@ function initializeStyles() {
         }
 
         .card {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1067,31 +1098,38 @@ function initializeStyles() {
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .card.selected {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            border: 2px solid #4CAF50;
-        }
-
         .card-image {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            display: block;
+            object-fit: contain;
+        }
+
+        .element-card {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .element-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .card-name {
             font-size: 14px;
             text-align: center;
-            color: #333;
-            max-width: 100px;
+            margin-top: 5px;
             word-wrap: break-word;
-            line-height: 1.2;
+            max-width: 90px;
         }
 
         .discard-button {
@@ -1110,89 +1148,20 @@ function initializeStyles() {
             background-color: #d32f2f;
         }
 
-        #hand {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            padding: 10px;
-            justify-content: center;
-        }
-
-        .field-container {
-            margin: 20px 0;
-        }
-
-        .field-container h3 {
-            margin-bottom: 15px;
-        }
-
-        .elements-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .element-container {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .element-card {
-            width: 100px;
-            height: 100px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            overflow: hidden;
-            background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .element-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .element-card.selected {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            border: 2px solid #4CAF50;
-        }
-
-        .element-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .element-info {
-            text-align: center;
-            font-size: 14px;
-            line-height: 1.3;
-        }
-
-        .element-symbol {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .sell-button {
-            padding: 5px 10px;
-            background-color: #2196F3;
+        /* アクションカード購入ボタンのスタイル */
+        #buy-action-card {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
             transition: background-color 0.2s ease;
         }
 
-        .sell-button:hover {
-            background-color: #1976D2;
+        #buy-action-card:hover {
+            background-color: #45a049;
         }
     `;
     document.head.appendChild(style);
