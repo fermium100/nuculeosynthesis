@@ -458,7 +458,7 @@ function updateGameBoard() {
         elementContainer.appendChild(sellButton);
 
         elementDiv.addEventListener('click', () => {
-            selectElementCard(index, elementDiv);
+            selectElementCard(index);
         });
 
         elementsDiv.appendChild(elementContainer);
@@ -549,8 +549,10 @@ function updateGameBoard() {
     checkDefeatCondition();
 }
 
-// アクションカードを選択する関数
+// アクションカードを選択する関数を修正
 function selectActionCard(index) {
+    console.log('Action card selected:', index); // デバッグログ
+    
     if (currentActionCardIndex === index) {
         // 選択解除
         currentActionCardIndex = null;
@@ -566,15 +568,19 @@ function selectActionCard(index) {
     // 元素カードの選択が不要な場合、即座にアクションを実行
     if (requiredSelections === 0) {
         playActionCard();
+    } else {
+        // 選択状態を視覚的に更新
+        updateGameBoard();
     }
-
-    updateGameBoard();
 }
 
-// 元素カードを選択する関数
-function selectElementCard(index, elementDiv) {
+// 元素カードを選択する関数を修正
+function selectElementCard(index) {
+    console.log('Element card selected:', index); // デバッグログ
+    console.log('Current action card:', currentActionCardIndex); // デバッグログ
+    
     if (currentActionCardIndex === null) {
-        alert('先にアクションカードを選択してください。');
+        showNotification('先にアクションカードを選んでください。', 'error');
         return;
     }
 
@@ -586,17 +592,21 @@ function selectElementCard(index, elementDiv) {
         selectedElementIndices = selectedElementIndices.filter(i => i !== index);
     } else {
         if (selectedElementIndices.length >= requiredSelections) {
-            alert(`このアクションでは${requiredSelections}枚の元素カードを選択する必要があります。`);
+            showNotification(`このアクションでは${requiredSelections}枚の元素カードを選択する必要があります。`, 'error');
             return;
         }
         selectedElementIndices.push(index);
     }
 
+    // 選択状態を視覚的に更新
     updateGameBoard();
 
     // 必要な数の元素カードが選択された場合、アクションを実行
     if (selectedElementIndices.length === requiredSelections) {
-        playActionCard();
+        // 少し遅延を入れてアクションを実行（タッチイベントの完了を待つ）
+        setTimeout(() => {
+            playActionCard();
+        }, 100);
     }
 }
 
@@ -1447,3 +1457,23 @@ function getElementImage(atomicNumber) {
         return 'heavyElements.png';
     }
 }
+
+// タッチイベントの伝播を防止
+function initializeTouchEvents() {
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.closest('.card') || e.target.closest('.element-card')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.card') || e.target.closest('.element-card')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
+// 初期化時にタッチイベントのハンドラを設定
+window.addEventListener('load', function() {
+    initializeTouchEvents();
+});
