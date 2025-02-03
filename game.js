@@ -534,31 +534,22 @@ function updateGameBoard() {
         cardName.className = 'card-name';
         cardName.textContent = card;
         
-        // クリックとタッチの両方のイベントを追加
-        cardDiv.addEventListener('click', () => {
-            selectActionCard(index);
+        // 処分ボタンを追加（カード名の下に配置）
+        const discardButton = document.createElement('button');
+        discardButton.className = 'discard-button';
+        discardButton.innerText = '処分';
+        discardButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            discardActionCard(index);
         });
         
-        cardDiv.addEventListener('touchend', (e) => {
-            e.preventDefault();
+        cardDiv.addEventListener('click', () => {
             selectActionCard(index);
         });
         
         cardContainer.appendChild(cardDiv);
         cardContainer.appendChild(cardName);
-        
-        // 処分ボタンを追加（選択されているカードのみ）
-        if (currentActionCardIndex === index) {
-            const discardButton = document.createElement('button');
-            discardButton.className = 'discard-button';
-            discardButton.innerText = '処分';
-            discardButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                discardActionCard(index);
-            });
-            cardContainer.appendChild(discardButton);
-        }
-        
+        cardContainer.appendChild(discardButton);  // カード名の後に追加
         handDiv.appendChild(cardContainer);
     });
 
@@ -1139,35 +1130,21 @@ function initializeStyles() {
         }
 
         .discard-button {
+            display: none;
             padding: 5px 10px;
-            background-color: #f44336;
+            background-color: #ff4444;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 12px;
-            margin-top: 5px;
-            transition: background-color 0.2s ease;
+            margin-top: 5px;  /* カード名との間隔 */
         }
 
-        .discard-button:hover {
-            background-color: #d32f2f;
-        }
-
-        /* アクションカード購入ボタンのスタイル */
-        #buy-action-card {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        #buy-action-card:hover {
-            background-color: #45a049;
+        /* PCでのホバー時のみ処分ボタンを表示 */
+        @media (hover: hover) {
+            .card-container:hover .discard-button {
+                display: block;
+            }
         }
     `;
     document.head.appendChild(style);
@@ -1263,6 +1240,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 手札拡張ボタンのイベントリスナーを設定
     document.getElementById('expand-hand-button').addEventListener('click', expandHandLimit);
+
+    // 手札全処分ボタンのイベントリスナーを設定
+    document.getElementById('discard-all-button').addEventListener('click', discardAllCards);
 });
 
 class NotificationManager {
@@ -1560,3 +1540,17 @@ window.addEventListener('load', () => {
     initializeEventListeners();
     addTouchStyles();
 });
+
+// 手札全処分の機能を追加
+function discardAllCards() {
+    if (playerHand.length === 0) {
+        showNotification('処分する手札がありません。', 'error');
+        return;
+    }
+    
+    playerHand = [];
+    currentActionCardIndex = null;
+    selectedElementIndices = [];
+    updateGameBoard();
+    showNotification('手札を全て処分しました。', 'info');
+}
