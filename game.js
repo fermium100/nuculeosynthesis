@@ -467,9 +467,8 @@ function updateGameBoard() {
         });
         elementContainer.appendChild(sellButton);
 
-        elementDiv.addEventListener('click', () => {
-            selectElementCard(index);
-        });
+        // イベントリスナーを追加
+        addElementCardListeners(elementDiv, index);
 
         elementsDiv.appendChild(elementContainer);
     });
@@ -535,12 +534,12 @@ function updateGameBoard() {
         const cardName = document.createElement('div');
         cardName.className = 'card-name';
         cardName.textContent = card;
+        
+        // イベントリスナーを追加
+        addActionCardListeners(cardDiv, index);
+        
         cardContainer.appendChild(cardDiv);
         cardContainer.appendChild(cardName);
-        
-        cardDiv.addEventListener('click', () => {
-            selectActionCard(index);
-        });
         
         // 処分ボタンを追加
         const discardButton = document.createElement('button');
@@ -1456,22 +1455,123 @@ function getElementImage(atomicNumber) {
     }
 }
 
-// タッチイベントの伝播を防止
-function initializeTouchEvents() {
-    document.addEventListener('touchstart', function(e) {
-        if (e.target.closest('.card') || e.target.closest('.element-card')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+// カードとタッチイベントの処理を追加
+function initializeEventListeners() {
+    // アクションカードのイベントリスナー
+    function addActionCardListeners(cardDiv, index) {
+        // クリックイベント（PC用）
+        cardDiv.addEventListener('click', () => {
+            selectActionCard(index);
+        });
 
-    document.addEventListener('touchmove', function(e) {
-        if (e.target.closest('.card') || e.target.closest('.element-card')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+        // タッチイベント（スマートフォン用）
+        cardDiv.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // デフォルトの動作を防止
+            selectActionCard(index);
+        });
+    }
+
+    // 元素カードのイベントリスナー
+    function addElementCardListeners(elementDiv, index) {
+        // クリックイベント（PC用）
+        elementDiv.addEventListener('click', () => {
+            selectElementCard(index);
+        });
+
+        // タッチイベント（スマートフォン用）
+        elementDiv.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // デフォルトの動作を防止
+            selectElementCard(index);
+        });
+    }
+
+    // updateGameBoard関数内でのイベントリスナー追加部分を修正
+    function updateGameBoard() {
+        // ... 既存のコード ...
+
+        // アクションカードの処理
+        playerHand.forEach((card, index) => {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'card-container';
+            
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            if (currentActionCardIndex === index) {
+                cardDiv.classList.add('selected');
+            }
+            
+            // 画像要素を作成
+            const cardImage = document.createElement('img');
+            cardImage.src = ACTION_CARD_IMAGES[card];
+            cardImage.alt = card;
+            cardImage.className = 'card-image';
+            cardDiv.appendChild(cardImage);
+
+            // カード名を表示
+            const cardName = document.createElement('div');
+            cardName.className = 'card-name';
+            cardName.textContent = card;
+            
+            // イベントリスナーを追加
+            addActionCardListeners(cardDiv, index);
+            
+            cardContainer.appendChild(cardDiv);
+            cardContainer.appendChild(cardName);
+            
+            // ... 処分ボタンの処理 ...
+            
+            handDiv.appendChild(cardContainer);
+        });
+
+        // 元素カードの処理
+        playerField.forEach((element, index) => {
+            const elementContainer = document.createElement('div');
+            elementContainer.className = 'element-container';
+            
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'element-card';
+            if (selectedElementIndices.includes(index)) {
+                elementDiv.classList.add('selected');
+            }
+
+            // ... 元素カードの内容を作成 ...
+
+            // イベントリスナーを追加
+            addElementCardListeners(elementDiv, index);
+            
+            // ... 残りの処理 ...
+            
+            elementsDiv.appendChild(elementContainer);
+        });
+
+        // ... 残りのコード ...
+    }
 }
 
-// 初期化時にタッチイベントのハンドラを設定
-window.addEventListener('load', function() {
-    initializeTouchEvents();
+// スタイルを追加して、タッチデバイスでの選択をより確実にする
+function addTouchStyles() {
+    const style = document.createElement('style');
+    style.textContent += `
+        @media (hover: none) {
+            .card, .element-card {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .card.selected, .element-card.selected {
+                background-color: rgba(76, 175, 80, 0.1);
+            }
+            
+            .card:active, .element-card:active {
+                background-color: rgba(0, 0, 0, 0.1);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 初期化時に実行
+window.addEventListener('load', () => {
+    initializeEventListeners();
+    addTouchStyles();
 });
