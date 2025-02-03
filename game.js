@@ -430,13 +430,19 @@ function updateGameBoard() {
     const elementsDiv = document.createElement('div');
     elementsDiv.className = 'elements-container';
     
-    playerField.forEach((element, index) => {
+    // 元素カードを原子番号の降順にソート
+    const sortedElements = playerField.slice().sort((a, b) => b.number - a.number);
+
+    sortedElements.forEach((element, index) => {
+        // オリジナルのインデックスを取得（アクション実行時に必要）
+        const originalIndex = playerField.indexOf(element);
+        
         const elementContainer = document.createElement('div');
         elementContainer.className = 'element-container';
         
         const elementDiv = document.createElement('div');
         elementDiv.className = 'element-card';
-        if (selectedElementIndices.includes(index)) {
+        if (selectedElementIndices.includes(originalIndex)) {
             elementDiv.classList.add('selected');
         }
 
@@ -463,18 +469,18 @@ function updateGameBoard() {
         sellButton.innerText = '売却';
         sellButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            sellElement(index);
+            sellElement(originalIndex);
         });
         elementContainer.appendChild(sellButton);
 
-        // クリックとタッチの両方のイベントを追加
+        // クリックイベントリスナーでは originalIndex を使用
         elementDiv.addEventListener('click', () => {
-            selectElementCard(index);
+            selectElementCard(originalIndex);
         });
         
         elementDiv.addEventListener('touchend', (e) => {
             e.preventDefault();
-            selectElementCard(index);
+            selectElementCard(originalIndex);
         });
 
         elementsDiv.appendChild(elementContainer);
