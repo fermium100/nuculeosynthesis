@@ -309,7 +309,7 @@ function setDifficulty(difficulty) {
     
     // ゲーム状態の初期化
     playerHand = [];
-    playerField = [{ number: 1, symbol: 'H', price: 10 }];
+    playerField = [{ number: 1, symbol: 'H', price: 1 }];
     researchFunding = INITIAL_FUNDING[difficulty];
     currentActionCardIndex = null;
     selectedElementIndices = [];
@@ -414,28 +414,57 @@ function updateGameBoard() {
 
     // 場の元素カードを表示
     const fieldDiv = document.createElement('div');
-    fieldDiv.innerText = '場の元素:';
+    fieldDiv.className = 'field-container';
+    fieldDiv.innerHTML = '<h3>場の元素:</h3>';
+    
+    const elementsDiv = document.createElement('div');
+    elementsDiv.className = 'elements-container';
+    
     playerField.forEach((element, index) => {
+        const elementContainer = document.createElement('div');
+        elementContainer.className = 'element-container';
+        
         const elementDiv = document.createElement('div');
-        elementDiv.className = 'card';
-        elementDiv.innerHTML = `${element.symbol} (原子番号: ${element.number})<br>価格: ${element.price}`;
+        elementDiv.className = 'element-card';
         if (selectedElementIndices.includes(index)) {
             elementDiv.classList.add('selected');
         }
+
+        // 画像要素を作成
+        const elementImage = document.createElement('img');
+        elementImage.src = getElementImage(element.number);
+        elementImage.className = 'element-image';
+        elementDiv.appendChild(elementImage);
+
+        // 元素情報を表示
+        const elementInfo = document.createElement('div');
+        elementInfo.className = 'element-info';
+        elementInfo.innerHTML = `
+            <div class="element-symbol">${element.symbol}</div>
+            <div class="element-number">原子番号: ${element.number}</div>
+            <div class="element-price">価格: ${element.price}</div>
+        `;
+        elementContainer.appendChild(elementDiv);
+        elementContainer.appendChild(elementInfo);
+
+        // 売却ボタンを追加
+        const sellButton = document.createElement('button');
+        sellButton.className = 'sell-button';
+        sellButton.innerText = '売却';
+        sellButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sellElement(index);
+        });
+        elementContainer.appendChild(sellButton);
+
         elementDiv.addEventListener('click', () => {
             selectElementCard(index, elementDiv);
         });
-        // 売却ボタンを追加
-        const sellButton = document.createElement('button');
-        sellButton.innerText = '売却';
-        sellButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // クリックイベントのバブリングを防止
-            sellElement(index);
-        });
-        elementDiv.appendChild(sellButton);
 
-        fieldDiv.appendChild(elementDiv);
+        elementsDiv.appendChild(elementContainer);
     });
+
+    fieldDiv.appendChild(elementsDiv);
     gameBoard.appendChild(fieldDiv);
 
     // 手札の表示部分の前に拡張ボタンを追加
@@ -689,10 +718,18 @@ function nuclearFission(index) {
 }
 
 function elementGacha() {
-    const randomAtomicNumber = Math.floor(Math.random() * 26) + 1; // 1から26まで
-    const symbol = getElementSymbol(randomAtomicNumber);
-    const price = getElementPrice(randomAtomicNumber);
-    playerField.push({ number: randomAtomicNumber, symbol: symbol, price: price });
+    // 軽元素のみをフィルタリング
+    const lightElements = elements.filter(element => element.number <= 20);
+    
+    // ランダムに1つ選択
+    const randomIndex = Math.floor(Math.random() * lightElements.length);
+    const element = lightElements[randomIndex];
+    
+    // 場に追加
+    playerField.push({ ...element });
+    
+    // 通知を表示
+    showNotification(`${element.symbol}（原子番号: ${element.number}）を獲得しました！`, 'success');
 }
 
 function grantFunding() {
@@ -931,7 +968,7 @@ function resetGame() {
 
     // ゲーム状態のリセット
     playerHand = [];
-    playerField = [{ number: 1, symbol: 'H', price: 10 }];
+    playerField = [{ number: 1, symbol: 'H', price: 1 }];
     researchFunding = INITIAL_FUNDING[currentDifficulty];
     currentActionCardIndex = null;
     selectedElementIndices = [];
@@ -1065,6 +1102,83 @@ function initializeStyles() {
             gap: 15px;
             padding: 10px;
             justify-content: center;
+        }
+
+        .field-container {
+            margin: 20px 0;
+        }
+
+        .field-container h3 {
+            margin-bottom: 15px;
+        }
+
+        .elements-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .element-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .element-card {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .element-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .element-card.selected {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border: 2px solid #4CAF50;
+        }
+
+        .element-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .element-info {
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+
+        .element-symbol {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .sell-button {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .sell-button:hover {
+            background-color: #1976D2;
         }
     `;
     document.head.appendChild(style);
@@ -1321,4 +1435,15 @@ const notificationManager = new NotificationManager();
 // showNotification関数を新しいマネージャーを使用するように更新
 function showNotification(message, type = 'normal') {
     notificationManager.show(message, type);
+}
+
+// 元素画像のマッピングを追加
+function getElementImage(atomicNumber) {
+    if (atomicNumber <= 20) {
+        return 'lightElements.png';
+    } else if (atomicNumber <= 92) {
+        return 'middleElements.png';
+    } else {
+        return 'heavyElements.png';
+    }
 }
