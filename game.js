@@ -555,16 +555,18 @@ function updateGameBoard() {
         cardContainer.appendChild(cardDiv);
         cardContainer.appendChild(cardName);
         
-        // 処分ボタンを追加
-        const discardButton = document.createElement('button');
-        discardButton.className = 'discard-button';
-        discardButton.innerText = '処分';
-        discardButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            discardActionCard(index);
-        });
+        // 処分ボタンを追加（選択されているカードのみ）
+        if (currentActionCardIndex === index) {
+            const discardButton = document.createElement('button');
+            discardButton.className = 'discard-button';
+            discardButton.innerText = '処分';
+            discardButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                discardActionCard(index);
+            });
+            cardContainer.appendChild(discardButton);
+        }
         
-        cardContainer.appendChild(discardButton);
         handDiv.appendChild(cardContainer);
     });
 
@@ -1093,24 +1095,15 @@ function initializeStyles() {
         }
 
         .discard-button {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
             padding: 5px 10px;
             background-color: #f44336;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s ease, transform 0.2s ease;
             font-size: 12px;
-        }
-
-        .card-container:hover .discard-button {
-            opacity: 1;
-            bottom: -25px;
+            margin-top: 5px;
+            transition: background-color 0.2s ease;
         }
 
         .discard-button:hover {
