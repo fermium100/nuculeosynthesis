@@ -467,8 +467,15 @@ function updateGameBoard() {
         });
         elementContainer.appendChild(sellButton);
 
-        // イベントリスナーを追加
-        addElementCardListeners(elementDiv, index);
+        // クリックとタッチの両方のイベントを追加
+        elementDiv.addEventListener('click', () => {
+            selectElementCard(index);
+        });
+        
+        elementDiv.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            selectElementCard(index);
+        });
 
         elementsDiv.appendChild(elementContainer);
     });
@@ -535,8 +542,15 @@ function updateGameBoard() {
         cardName.className = 'card-name';
         cardName.textContent = card;
         
-        // イベントリスナーを追加
-        addActionCardListeners(cardDiv, index);
+        // クリックとタッチの両方のイベントを追加
+        cardDiv.addEventListener('click', () => {
+            selectActionCard(index);
+        });
+        
+        cardDiv.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            selectActionCard(index);
+        });
         
         cardContainer.appendChild(cardDiv);
         cardContainer.appendChild(cardName);
@@ -842,7 +856,7 @@ function removeExpiredNotifications() {
                     notifications.splice(currentIndex, 1);
                 }
             }
-        });
+        }, { once: true });
     });
 }
 
