@@ -255,6 +255,16 @@ const ACTION_CARD_IMAGES = {
     '科研費獲得': 'grantFunding.png'
 };
 
+// アクションカードの種類を定義
+const ACTION_TYPES = {
+    '中性子線照射': 'requires_element',
+    'α崩壊': 'requires_element',
+    '核融合': 'requires_elements',
+    '核分裂': 'requires_element',
+    '元素ガチャ': 'instant',
+    '科研費獲得': 'instant'
+};
+
 // プレイヤーの手札と場
 let playerHand = [];
 let playerField = [{ number: 1, symbol: 'H', price: 1 }]; // 初期は水素
@@ -549,35 +559,29 @@ function updateGameBoard() {
     checkDefeatCondition();
 }
 
-// アクションカードを選択する関数を修正
+// selectActionCard関数を修正
 function selectActionCard(index) {
-    console.log('Action card selected:', index); // デバッグログ
+    console.log('Action card selected:', index);
+    const cardName = playerHand[index];
+    const actionType = ACTION_TYPES[cardName];
     
-    if (currentActionCardIndex === index) {
-        // 選択解除
-        currentActionCardIndex = null;
-        selectedElementIndices = [];
-    } else {
+    if (actionType === 'instant') {
+        // 即時実行タイプのカード
         currentActionCardIndex = index;
-        selectedElementIndices = [];
-    }
-
-    const cardName = playerHand[currentActionCardIndex];
-    const requiredSelections = getRequiredSelections(cardName);
-
-    // 元素カードの選択が不要な場合、即座にアクションを実行
-    if (requiredSelections === 0) {
         playActionCard();
     } else {
-        // 選択状態を視覚的に更新
+        // 元素選択が必要なカード
+        currentActionCardIndex = index;
+        selectedElementIndices = [];
+        showNotification('元素カードを選択してください', 'info');
         updateGameBoard();
     }
 }
 
-// 元素カードを選択する関数を修正
+// selectElementCard関数を修正
 function selectElementCard(index) {
-    console.log('Element card selected:', index); // デバッグログ
-    console.log('Current action card:', currentActionCardIndex); // デバッグログ
+    console.log('Element card selected:', index);
+    console.log('Current action card:', currentActionCardIndex);
     
     if (currentActionCardIndex === null) {
         showNotification('先にアクションカードを選んでください。', 'error');
@@ -585,86 +589,80 @@ function selectElementCard(index) {
     }
 
     const cardName = playerHand[currentActionCardIndex];
-    const requiredSelections = getRequiredSelections(cardName);
-
-    if (selectedElementIndices.includes(index)) {
-        // 選択解除
-        selectedElementIndices = selectedElementIndices.filter(i => i !== index);
-    } else {
-        if (selectedElementIndices.length >= requiredSelections) {
-            showNotification(`このアクションでは${requiredSelections}枚の元素カードを選択する必要があります。`, 'error');
-            return;
+    const actionType = ACTION_TYPES[cardName];
+    
+    if (actionType === 'requires_element') {
+        // 1枚の元素カードを必要とするアクション
+        selectedElementIndices = [index];
+        playActionCard();
+    } else if (actionType === 'requires_elements') {
+        // 2枚の元素カードを必要とするアクション（核融合）
+        if (!selectedElementIndices.includes(index)) {
+            selectedElementIndices.push(index);
+            if (selectedElementIndices.length === 2) {
+                playActionCard();
+            } else {
+                showNotification('もう1枚の元素カードを選択してください', 'info');
+                updateGameBoard();
+            }
         }
-        selectedElementIndices.push(index);
-    }
-
-    // 選択状態を視覚的に更新
-    updateGameBoard();
-
-    // 必要な数の元素カードが選択された場合、アクションを実行
-    if (selectedElementIndices.length === requiredSelections) {
-        // 少し遅延を入れてアクションを実行（タッチイベントの完了を待つ）
-        setTimeout(() => {
-            playActionCard();
-        }, 100);
     }
 }
 
-// アクションカードの使用条件を取得する関数
-function getRequiredSelections(cardName) {
-    switch (cardName) {
-        case '中性子線照射':
-        case 'α崩壊':
-        case '核分裂':
-            return 1;
-        case '核融合':
-            return 2;
-        default:
-            return 0;
-    }
-}
-
-// アクションカードを使用する関数
+// playActionCard関数を修正
 function playActionCard() {
+    if (currentActionCardIndex === null) return;
+    
     const card = playerHand[currentActionCardIndex];
+    const actionType = ACTION_TYPES[card];
 
     // アクションの実行
-    switch (card) {
-        case '中性子線照射':
-            neutronIrradiation(selectedElementIndices[0]);
-            break;
-        case 'α崩壊':
-            alphaDecay(selectedElementIndices[0]);
-            break;
-        case '核融合':
-            nuclearFusion(selectedElementIndices[0], selectedElementIndices[1]);
-            break;
-        case '核分裂':
-            nuclearFission(selectedElementIndices[0]);
-            break;
-        case '元素ガチャ':
-            elementGacha();
-            break;
-        case '科研費獲得':
-            grantFunding();
-            break;
-        default:
-            alert('未知のアクションカードです。');
-            return;
-    }
+    try {
+        switch (card) {
+            case '中性子線照射':
+                neutronIrradiation(selectedElementIndices[0]);
+                break;
+            case 'α崩壊':
+                alphaDecay(selectedElementIndices[0]);
+                break;
+            case '核融合':
+                if (selectedElementIndices.length !== 2) {
+                    showNotification('2つの元素を選択してください', 'error');
+                    return;
+                }
+                nuclearFusion(selectedElementIndices[0], selectedElementIndices[1]);
+                break;
+            case '核分裂':
+                nuclearFission(selectedElementIndices[0]);
+                break;
+            case '元素ガチャ':
+                elementGacha();
+                break;
+            case '科研費獲得':
+                grantFunding();
+                break;
+            default:
+                showNotification('未知のアクションカードです。', 'error');
+                return;
+        }
 
-    // 豆知識の表示
-    if (trivia[card]) {
-        const randomTrivia = trivia[card][Math.floor(Math.random() * trivia[card].length)];
-        showNotification(`豆知識: ${randomTrivia}`, 'info');
-    }
+        // 豆知識の表示
+        if (trivia[card]) {
+            const randomTrivia = trivia[card][Math.floor(Math.random() * trivia[card].length)];
+            showNotification(`豆知識: ${randomTrivia}`, 'info');
+        }
 
-    // 使用したアクションカードを手札から削除
-    playerHand.splice(currentActionCardIndex, 1);
-    currentActionCardIndex = null;
-    selectedElementIndices = [];
-    updateGameBoard();
-    checkWinCondition();
+        // 使用したアクションカードを手札から削除
+        playerHand.splice(currentActionCardIndex, 1);
+        currentActionCardIndex = null;
+        selectedElementIndices = [];
+        updateGameBoard();
+        checkWinCondition();
+        
+    } catch (error) {
+        console.error('Action execution error:', error);
+        showNotification('アクションの実行中にエラーが発生しました', 'error');
+    }
 }
 
 // アクションカードの効果実装
