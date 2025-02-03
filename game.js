@@ -1428,13 +1428,12 @@ function showNotification(message, type = 'normal') {
 
 // 元素画像のマッピングを追加
 function getElementImage(atomicNumber) {
-    if (atomicNumber <= 20) {
-        return 'lightElements.png';
-    } else if (atomicNumber <= 92) {
-        return 'middleElements.png';
-    } else {
-        return 'heavyElements.png';
+    // 118番（Og）の場合は特別な画像を使用
+    if (atomicNumber === 118) {
+        return 'ultraheavyElements.png';
     }
+    // それ以外は通常の画像を使用
+    return 'elements.png';
 }
 
 // カードとタッチイベントの処理を追加
