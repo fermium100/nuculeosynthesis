@@ -1426,14 +1426,18 @@ function showNotification(message, type = 'normal') {
     notificationManager.show(message, type);
 }
 
-// 元素画像のマッピングを追加
+// getElementImage関数を修正
 function getElementImage(atomicNumber) {
-    // 118番（Og）の場合は特別な画像を使用
-    if (atomicNumber === 118) {
+    if (atomicNumber <= 20) {
+        return 'lightElements.png';
+    } else if (atomicNumber <= 92) {
+        return 'middleElements.png';
+    } else if (atomicNumber <= 117) {
+        return 'heavyElements.png';
+    } else if (atomicNumber === 118) {
         return 'ultraheavyElements.png';
     }
-    // それ以外は通常の画像を使用
-    return 'elements.png';
+    return 'lightElements.png';  // デフォルトとして軽元素の画像を使用
 }
 
 // カードとタッチイベントの処理を追加
