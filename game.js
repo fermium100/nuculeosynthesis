@@ -494,67 +494,71 @@ function updateGameBoard() {
 
     // 手札の表示部分をクリア
     const handDiv = document.getElementById('hand');
-    handDiv.innerHTML = '';
-    
-    // 既存の手札情報を更新
-    const handCountElement = document.getElementById('hand-count');
-    handCountElement.innerText = `手札: ${playerHand.length}/${handLimit}`;
-    handCountElement.setAttribute('data-hand-limit', handLimit);
-    
-    // 既存の拡張ボタンを更新
-    const expandButton = document.getElementById('expand-hand-button');
-    expandButton.innerText = `手札枠を拡張 (${getExpansionCost(handLimit).toLocaleString()})`;
-    expandButton.setAttribute('data-current-limit', handLimit);
-    
-    if (researchFunding >= getExpansionCost(handLimit)) {
-        expandButton.disabled = false;
-        expandButton.classList.remove('disabled');
-    } else {
-        expandButton.disabled = true;
-        expandButton.classList.add('disabled');
+    if (handDiv) {
+        handDiv.innerHTML = '';
+        playerHand.forEach((card, index) => {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'card-container';
+            
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            if (currentActionCardIndex === index) {
+                cardDiv.classList.add('selected');
+            }
+            
+            // カード画像を表示
+            const cardImage = document.createElement('img');
+            cardImage.src = ACTION_CARD_IMAGES[card];
+            cardImage.alt = card;
+            cardImage.className = 'card-image';
+            cardDiv.appendChild(cardImage);
+
+            // カード名を表示
+            const cardName = document.createElement('div');
+            cardName.className = 'card-name';
+            cardName.textContent = card;
+            
+            // 処分ボタンを作成
+            const discardButton = document.createElement('button');
+            discardButton.className = 'discard-button';
+            if (currentActionCardIndex === index) {
+                discardButton.classList.add('show-mobile');
+            }
+            discardButton.textContent = '処分';
+            
+            // カードのタップ/クリック処理
+            const handleCardSelect = (e) => {
+                e.preventDefault(); // デフォルトの動作を防止
+                
+                // 現在選択中のカードの場合
+                if (currentActionCardIndex === index) {
+                    // 何もしない（選択状態を維持）
+                } else {
+                    // 他のカードを選択した場合
+                    selectActionCard(index);
+                }
+            };
+            
+            // 処分ボタンの処理
+            const handleDiscard = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                discardActionCard(index);
+            };
+            
+            // イベントリスナーを設定
+            cardDiv.addEventListener('click', handleCardSelect);
+            cardDiv.addEventListener('touchstart', handleCardSelect);
+            
+            discardButton.addEventListener('click', handleDiscard);
+            discardButton.addEventListener('touchstart', handleDiscard);
+            
+            cardContainer.appendChild(cardDiv);
+            cardContainer.appendChild(cardName);
+            cardContainer.appendChild(discardButton);
+            handDiv.appendChild(cardContainer);
+        });
     }
-
-    // 手札のカードを表示
-    playerHand.forEach((card, index) => {
-        const cardContainer = document.createElement('div');
-        cardContainer.className = 'card-container';
-        
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'card';
-        if (currentActionCardIndex === index) {
-            cardDiv.classList.add('selected');
-        }
-        
-        // 画像要素を作成
-        const cardImage = document.createElement('img');
-        cardImage.src = ACTION_CARD_IMAGES[card];
-        cardImage.alt = card;
-        cardImage.className = 'card-image';
-        cardDiv.appendChild(cardImage);
-
-        // カード名を表示
-        const cardName = document.createElement('div');
-        cardName.className = 'card-name';
-        cardName.textContent = card;
-        
-        // 処分ボタンを追加（カード名の下に配置）
-        const discardButton = document.createElement('button');
-        discardButton.className = 'discard-button';
-        discardButton.innerText = '処分';
-        discardButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            discardActionCard(index);
-        });
-        
-        cardDiv.addEventListener('click', () => {
-            selectActionCard(index);
-        });
-        
-        cardContainer.appendChild(cardDiv);
-        cardContainer.appendChild(cardName);
-        cardContainer.appendChild(discardButton);  // カード名の後に追加
-        handDiv.appendChild(cardContainer);
-    });
 
     // 敗北条件のチェック
     checkDefeatCondition();
@@ -1611,17 +1615,19 @@ class NotificationManager {
         notification.isDissolving = true;
         notification.element.classList.add('dissolving');
 
-        notification.element.addEventListener('transitionend', (e) => {
+        // ここを修正
+        const handler = (e) => {
             if (e.propertyName === 'opacity') {
-                notification.element.removeEventListener('transitionend', handler);
                 notification.element.remove();
                 
-                const currentIndex = notifications.findIndex(n => n.id === notification.id);
+                const currentIndex = this.notifications.findIndex(n => n.id === notification.id);
                 if (currentIndex !== -1) {
-                    notifications.splice(currentIndex, 1);
+                    this.notifications.splice(currentIndex, 1);
                 }
             }
-        }, { once: true });
+        };
+
+        notification.element.addEventListener('transitionend', handler, { once: true });
 
         // 即座に位置更新を開始
         this.updatePositions();
@@ -1703,62 +1709,75 @@ function initializeEventListeners() {
     function updateGameBoard() {
         // ... 既存のコード ...
 
-        // アクションカードの処理
-        playerHand.forEach((card, index) => {
-            const cardContainer = document.createElement('div');
-            cardContainer.className = 'card-container';
-            
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'card';
-            if (currentActionCardIndex === index) {
-                cardDiv.classList.add('selected');
-            }
-            
-            // 画像要素を作成
-            const cardImage = document.createElement('img');
-            cardImage.src = ACTION_CARD_IMAGES[card];
-            cardImage.alt = card;
-            cardImage.className = 'card-image';
-            cardDiv.appendChild(cardImage);
+        // 手札の表示を更新
+        const handDiv = document.getElementById('hand');
+        if (handDiv) {
+            handDiv.innerHTML = '';
+            playerHand.forEach((card, index) => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container';
+                
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                if (currentActionCardIndex === index) {
+                    cardDiv.classList.add('selected');
+                }
+                
+                // カード画像を表示
+                const cardImage = document.createElement('img');
+                cardImage.src = ACTION_CARD_IMAGES[card];
+                cardImage.alt = card;
+                cardImage.className = 'card-image';
+                cardDiv.appendChild(cardImage);
 
-            // カード名を表示
-            const cardName = document.createElement('div');
-            cardName.className = 'card-name';
-            cardName.textContent = card;
-            
-            // イベントリスナーを追加
-            addActionCardListeners(cardDiv, index);
-            
-            cardContainer.appendChild(cardDiv);
-            cardContainer.appendChild(cardName);
-            
-            // ... 処分ボタンの処理 ...
-            
-            handDiv.appendChild(cardContainer);
-        });
+                // カード名を表示
+                const cardName = document.createElement('div');
+                cardName.className = 'card-name';
+                cardName.textContent = card;
+                
+                // 処分ボタンを作成
+                const discardButton = document.createElement('button');
+                discardButton.className = 'discard-button';
+                if (currentActionCardIndex === index) {
+                    discardButton.classList.add('show-mobile');
+                }
+                discardButton.textContent = '処分';
+                
+                // カードのタップ/クリック処理
+                const handleCardSelect = (e) => {
+                    e.preventDefault(); // デフォルトの動作を防止
+                    
+                    // 現在選択中のカードの場合
+                    if (currentActionCardIndex === index) {
+                        // 何もしない（選択状態を維持）
+                    } else {
+                        // 他のカードを選択した場合
+                        selectActionCard(index);
+                    }
+                };
+                
+                // 処分ボタンの処理
+                const handleDiscard = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    discardActionCard(index);
+                };
+                
+                // イベントリスナーを設定
+                cardDiv.addEventListener('click', handleCardSelect);
+                cardDiv.addEventListener('touchstart', handleCardSelect);
+                
+                discardButton.addEventListener('click', handleDiscard);
+                discardButton.addEventListener('touchstart', handleDiscard);
+                
+                cardContainer.appendChild(cardDiv);
+                cardContainer.appendChild(cardName);
+                cardContainer.appendChild(discardButton);
+                handDiv.appendChild(cardContainer);
+            });
+        }
 
-        // 元素カードの処理
-        playerField.forEach((element, index) => {
-            const elementContainer = document.createElement('div');
-            elementContainer.className = 'element-container';
-            
-            const elementDiv = document.createElement('div');
-            elementDiv.className = 'element-card';
-            if (selectedElementIndices.includes(index)) {
-                elementDiv.classList.add('selected');
-            }
-
-            // ... 元素カードの内容を作成 ...
-
-            // イベントリスナーを追加
-            addElementCardListeners(elementDiv, index);
-            
-            // ... 残りの処理 ...
-            
-            elementsDiv.appendChild(elementContainer);
-        });
-
-        // ... 残りのコード ...
+        // ... 既存のコード ...
     }
 }
 
@@ -1989,3 +2008,52 @@ window.addEventListener('load', () => {
     addHelpStyles();
     addFooter();
 });
+
+const style = document.createElement('style');
+style.textContent = `
+    .card-container {
+        position: relative;
+        margin: 10px;
+        display: inline-block;
+    }
+
+    .card {
+        position: relative;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .card.selected {
+        border: 2px solid #4CAF50;
+    }
+
+    .discard-button {
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        z-index: 10;
+        display: none;
+    }
+
+    /* PCでのホバー時の表示 */
+    @media (hover: hover) {
+        .card-container:hover .discard-button {
+            display: block;
+        }
+    }
+
+    /* モバイルでの選択時の表示 */
+    @media (hover: none) {
+        .discard-button.show-mobile {
+            display: block !important;
+        }
+    }
+`;
+document.head.appendChild(style);
