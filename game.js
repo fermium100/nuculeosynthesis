@@ -503,7 +503,7 @@ function updateGameBoard() {
     
     // 既存の拡張ボタンを更新
     const expandButton = document.getElementById('expand-hand-button');
-    expandButton.innerText = `手札枠を拡張 (¥${getExpansionCost(handLimit).toLocaleString()})`;
+    expandButton.innerText = `手札枠を拡張 (${getExpansionCost(handLimit).toLocaleString()})`;
     expandButton.setAttribute('data-current-limit', handLimit);
     
     if (researchFunding >= getExpansionCost(handLimit)) {
@@ -1842,3 +1842,150 @@ function buyAllActionCards() {
         showNotification('これ以上獲得可能なカードがありません。', 'error');
     }
 }
+
+// フッターにヘルプボタンを追加する関数
+function addFooter() {
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+        border-top: 1px solid #ddd;
+    `;
+    
+    const helpButton = document.createElement('button');
+    helpButton.textContent = '遊び方を見る';
+    helpButton.className = 'help-button';
+    helpButton.onclick = showHelp;
+    
+    footer.appendChild(helpButton);
+    document.body.appendChild(footer);
+}
+
+// ヘルプポップアップを表示する関数
+function showHelp() {
+    const helpOverlay = document.createElement('div');
+    helpOverlay.className = 'help-overlay';
+    
+    const helpContent = document.createElement('div');
+    helpContent.className = 'help-content';
+    
+    helpContent.innerHTML = `
+        <h2>遊び方</h2>
+        <h3>基本ルール</h3>
+        <ul>
+            <li>目標：原子番号118のオガネソンを作成する</li>
+            <li>研究費を使ってアクションカードを購入し、元素を操作します</li>
+            <li>アクションカードは1枚50の研究費で購入できます</li>
+        </ul>
+        
+        <h3>アクションカードの種類</h3>
+        <ul>
+            <li>中性子線照射：原子番号が1つ増加</li>
+            <li>α崩壊：原子番号が2つ減少</li>
+            <li>核融合：2つの元素を合成して新しい元素を作成</li>
+            <li>核分裂：1つの元素を2つに分裂</li>
+            <li>元素ガチャ：ランダムな軽元素を獲得</li>
+            <li>科研費獲得：研究費を250獲得</li>
+        </ul>
+        
+        <h3>その他の機能</h3>
+        <ul>
+            <li>元素は売却して研究費に変換できます</li>
+            <li>手札の上限は拡張可能です（研究費が必要）</li>
+            <li>不要なアクションカードは100の研究費で処分できます</li>
+        </ul>
+        
+        <button class="close-help">閉じる</button>
+    `;
+    
+    helpOverlay.appendChild(helpContent);
+    document.body.appendChild(helpOverlay);
+    
+    // 閉じるボタンのイベントリスナー
+    const closeButton = helpContent.querySelector('.close-help');
+    closeButton.onclick = () => {
+        document.body.removeChild(helpOverlay);
+    };
+    
+    // オーバーレイクリックで閉じる
+    helpOverlay.onclick = (e) => {
+        if (e.target === helpOverlay) {
+            document.body.removeChild(helpOverlay);
+        }
+    };
+}
+
+// スタイルを追加
+function addHelpStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .help-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .help-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .help-content h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .help-content h3 {
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+        
+        .help-content ul {
+            padding-left: 20px;
+        }
+        
+        .help-content li {
+            margin-bottom: 8px;
+        }
+        
+        .close-help {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 初期化時に実行
+window.addEventListener('load', () => {
+    addHelpStyles();
+    addFooter();
+});
