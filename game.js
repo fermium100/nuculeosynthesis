@@ -930,16 +930,20 @@ function removeElementsFromField(indices) {
     });
 }
 
+// グローバル変数として追加
+let hasShownWinAlert = false;
+
 function checkWinCondition() {
-    if (playerField.some(el => el.number === 118)) {
+    if (playerField.some(el => el.number === 118) && !hasShownWinAlert) {
         // まず画面を更新
         updateGameBoard();
         
-        // 少し遅延を入れてからアラートを表示
+        // 少し遅延を入れてからアラートを表示（初回のみ）
         setTimeout(() => {
             alert('おめでとうございます！オガネソンを生成しました！ゲームクリアです。');
             showResetButton();
-        }, 100);  // 100ミリ秒の遅延
+            hasShownWinAlert = true;  // フラグを立てる
+        }, 100);
     }
 }
 
@@ -954,6 +958,7 @@ function showResetButton() {
     document.getElementById('reset-button').style.display = 'inline-block';
 }
 
+// リセット時にフラグもリセット
 function resetGame() {
     // リセット時の確認（ただし初回のゲーム開始時は確認しない）
     if (playerHand.length > 0 || playerField.length > 1 || researchFunding !== INITIAL_FUNDING[currentDifficulty]) {
@@ -961,6 +966,9 @@ function resetGame() {
             return;
         }
     }
+
+    // フラグをリセット
+    hasShownWinAlert = false;
 
     // 全ての画面要素を一旦非表示に
     document.getElementById('game-board').style.display = 'none';
