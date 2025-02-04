@@ -444,6 +444,9 @@ function updateGameBoard() {
         elementDiv.className = 'element-card';
         if (selectedElementIndices.includes(originalIndex)) {
             elementDiv.classList.add('selected');
+            // 選択順序を表示（核融合用）
+            const selectionOrder = selectedElementIndices.indexOf(originalIndex) + 1;
+            elementDiv.setAttribute('data-selection-order', selectionOrder);
         }
 
         // 画像要素を作成
@@ -929,8 +932,14 @@ function removeElementsFromField(indices) {
 
 function checkWinCondition() {
     if (playerField.some(el => el.number === 118)) {
-        alert('おめでとうございます！オガネソンを生成しました！ゲームクリアです。');
-        showResetButton();
+        // まず画面を更新
+        updateGameBoard();
+        
+        // 少し遅延を入れてからアラートを表示
+        setTimeout(() => {
+            alert('おめでとうございます！オガネソンを生成しました！ゲームクリアです。');
+            showResetButton();
+        }, 100);  // 100ミリ秒の遅延
     }
 }
 
@@ -1113,6 +1122,8 @@ function initializeStyles() {
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
         }
 
         .element-image {
@@ -1146,6 +1157,233 @@ function initializeStyles() {
                 display: block;
             }
         }
+
+        .element-card.selected {
+            box-shadow: 0 0 10px #4CAF50;
+            transform: scale(1.05);
+        }
+
+        /* 核融合用の選択順序表示 */
+        .element-card.selected::after {
+            content: attr(data-selection-order);
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #4CAF50;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #discard-all-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;  /* ボタン間の間隔 */
+            margin: 20px 0;
+        }
+
+        #buy-buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;  /* ボタン間の間隔 */
+            margin: 10px 0;
+        }
+
+        #buy-buttons-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            width: 250px;  /* 固定幅を設定 */
+            white-space: nowrap;  /* テキストを折り返さない */
+        }
+
+        #buy-buttons-container button:hover {
+            background-color: #45a049;
+        }
+
+        #buy-buttons-container button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* スマートフォン向けの調整 */
+        @media (max-width: 768px) {
+            #buy-buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #buy-buttons-container button {
+                width: 80%;  /* スマートフォンでは画面幅に応じた幅 */
+                margin: 5px 0;
+            }
+        }
+
+        /* ... 既存のスタイル ... */
+
+        #buy-buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        #buy-buttons-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            width: 300px;  /* 幅を300pxに増やす */
+            white-space: nowrap;
+        }
+
+        #buy-buttons-container button:hover {
+            background-color: #45a049;
+        }
+
+        #buy-buttons-container button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* スマートフォン向けの調整 */
+        @media (max-width: 768px) {
+            #buy-buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #buy-buttons-container button {
+                width: 90%;  /* スマートフォンでの幅を90%に増やす */
+                margin: 5px 0;
+            }
+        }
+
+        /* ... 既存のスタイル ... */
+
+        #buy-buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        #buy-buttons-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            width: 300px;
+            height: 45px;  /* 固定の高さを設定 */
+            white-space: nowrap;
+            display: flex;  /* Flexboxを使用 */
+            justify-content: center;  /* 水平方向の中央揃え */
+            align-items: center;  /* 垂直方向の中央揃え */
+        }
+
+        #buy-buttons-container button:hover {
+            background-color: #45a049;
+        }
+
+        #buy-buttons-container button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* スマートフォン向けの調整 */
+        @media (max-width: 768px) {
+            #buy-buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #buy-buttons-container button {
+                width: 90%;
+                margin: 5px 0;
+            }
+        }
+
+        /* ... 既存のスタイル ... */
+
+        #buy-buttons-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;  /* 追加: 垂直方向の中央揃え */
+            gap: 10px;
+            margin: 10px 0;
+            height: 45px;  /* コンテナ自体の高さを設定 */
+        }
+
+        #buy-buttons-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            width: 300px;
+            height: 45px;
+            white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ... 残りのスタイル ... */
+
+        /* ... 既存のスタイル ... */
+
+        #buy-buttons-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            height: 45px;
+            line-height: 1;  /* 追加: 行の高さを統一 */
+        }
+
+        #buy-buttons-container button {
+            padding: 0;  /* パディングをリセット */
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            width: 300px;
+            height: 45px;
+            white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1;  /* 追加: 行の高さを統一 */
+            margin: 0;  /* マージンをリセット */
+        }
+
+        /* ... 残りのスタイル ... */
     `;
     document.head.appendChild(style);
 }
@@ -1243,6 +1481,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 手札全処分ボタンのイベントリスナーを設定
     document.getElementById('discard-all-button').addEventListener('click', discardAllCards);
+
+    // アクションカードを全て購入する関数を設定
+    document.getElementById('buy-all-button').addEventListener('click', buyAllActionCards);
 });
 
 class NotificationManager {
@@ -1541,16 +1782,55 @@ window.addEventListener('load', () => {
     addTouchStyles();
 });
 
-// 手札全処分の機能を追加
+// 手札全処分の機能にコストを追加
 function discardAllCards() {
     if (playerHand.length === 0) {
         showNotification('処分する手札がありません。', 'error');
         return;
     }
     
+    const totalCost = playerHand.length * 100;
+    if (researchFunding < totalCost) {
+        showNotification(`研究費が不足しています。(必要: ${totalCost})`, 'error');
+        return;
+    }
+    
+    researchFunding -= totalCost;
     playerHand = [];
     currentActionCardIndex = null;
     selectedElementIndices = [];
     updateGameBoard();
-    showNotification('手札を全て処分しました。', 'info');
+    showNotification(`手札を全て処分しました。(消費: ${totalCost})`, 'info');
+}
+
+// アクションカードを全て購入する関数
+function buyAllActionCards() {
+    const remainingSpace = handLimit - playerHand.length;
+    if (remainingSpace <= 0) {
+        showNotification('手札が上限に達しています。', 'error');
+        return;
+    }
+
+    const costPerCard = 50;
+    const totalCost = remainingSpace * costPerCard;
+    
+    if (researchFunding < totalCost) {
+        showNotification(`研究費が不足しています。(必要: ${totalCost})`, 'error');
+        return;
+    }
+
+    let cardsDrawn = 0;
+    for (let i = 0; i < remainingSpace; i++) {
+        if (drawActionCard()) {
+            cardsDrawn++;
+        }
+    }
+
+    if (cardsDrawn > 0) {
+        researchFunding -= cardsDrawn * costPerCard;
+        updateGameBoard();
+        showNotification(`アクションカードを${cardsDrawn}枚購入しました。(消費: ${cardsDrawn * costPerCard})`, 'success');
+    } else {
+        showNotification('これ以上獲得可能なカードがありません。', 'error');
+    }
 }
