@@ -871,7 +871,7 @@ setInterval(() => {
 function sellElement(index) {
     const element = playerField[index];
     researchFunding += element.price;
-    playerField.splice(index, index + 1);
+    playerField.splice(index, 1);  // 第2引数を1に修正（削除する要素数）
     showNotification(`研究費 ${element.price} を獲得しました！`);
     updateGameBoard();
 }
