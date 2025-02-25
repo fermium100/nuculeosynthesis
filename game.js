@@ -398,26 +398,193 @@ function updateGameBoard() {
     priceListDiv.className = 'price-list';
     priceListDiv.style.display = 'none'; // 初期状態では非表示
     
-    const priceTable = document.createElement('div');
-    priceTable.className = 'price-table';
-    elements.forEach(element => {
-        const elementPrice = document.createElement('div');
-        elementPrice.className = 'element-price';
-        elementPrice.innerHTML = `${element.number}. ${element.symbol}: ¥${element.price}`;
-        priceTable.appendChild(elementPrice);
-    });
-    
-    // トグルボタンのクリックイベント
+    // トグルボタンのイベントリスナーを追加
     toggleButton.addEventListener('click', () => {
-        const isHidden = priceListDiv.style.display === 'none';
-        priceListDiv.style.display = isHidden ? 'block' : 'none';
-        toggleButton.innerText = isHidden ? '価格表を隠す' : '価格表を表示';
+        if (priceListDiv.style.display === 'none') {
+            priceListDiv.style.display = 'block';
+            toggleButton.textContent = '価格表を隠す';
+        } else {
+            priceListDiv.style.display = 'none';
+            toggleButton.textContent = '価格表を表示';
+        }
     });
-    
+
+    const priceTable = document.createElement('div');
+    priceTable.className = 'periodic-table';
+
+    // 周期表のレイアウト定義
+    const periodicLayout = [
+        [1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2],
+        [3, 4, null, null, null, null, null, null, null, null, null, null, 5, 6, 7, 8, 9, 10],
+        [11, 12, null, null, null, null, null, null, null, null, null, null, 13, 14, 15, 16, 17, 18],
+        [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
+        [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
+        [55, 56, '*', 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86],
+        [87, 88, '**', 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118]
+    ];
+
+    // ランタノイド・アクチノイド
+    const specialRows = [
+        [null, null, '*', 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71],
+        [null, null, '**', 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103]
+    ];
+
+    // メインの周期表を生成
+    periodicLayout.forEach(row => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'periodic-row';
+        
+        row.forEach(atomicNumber => {
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'element-cell';
+            
+            if (atomicNumber === null) {
+                elementDiv.className += ' empty';
+            } else if (atomicNumber === '*' || atomicNumber === '**') {
+                elementDiv.textContent = atomicNumber;
+            } else {
+                const element = elements.find(e => e.number === atomicNumber);
+                if (element) {
+                    elementDiv.innerHTML = `
+                        <div class="atomic-number">${element.number}</div>
+                        <div class="element-symbol">${element.symbol}</div>
+                        <div class="element-price">¥${element.price}</div>
+                    `;
+                }
+            }
+            rowDiv.appendChild(elementDiv);
+        });
+        priceTable.appendChild(rowDiv);
+    });
+
+    // ランタノイド・アクチノイドの行を追加
+    specialRows.forEach(row => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'periodic-row';
+        row.forEach(atomicNumber => {
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'element-cell';
+            if (atomicNumber === null || atomicNumber === '*' || atomicNumber === '**') {
+                elementDiv.className += ' empty';
+                if (atomicNumber) elementDiv.textContent = atomicNumber;
+            } else {
+                const element = elements.find(e => e.number === atomicNumber);
+                if (element) {
+                    elementDiv.innerHTML = `
+                        <div class="atomic-number">${element.number}</div>
+                        <div class="element-symbol">${element.symbol}</div>
+                        <div class="element-price">¥${element.price}</div>
+                    `;
+                }
+            }
+            rowDiv.appendChild(elementDiv);
+        });
+        priceTable.appendChild(rowDiv);
+    });
+
+    // スタイルを追加
+    const style = document.createElement('style');
+    style.textContent = `
+        .price-list {
+            overflow-x: auto;
+        }
+
+        .periodic-table {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 15px;
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+
+        .periodic-row {
+            display: flex;
+            gap: 2px;  // ギャップを小さく
+            justify-content: center;
+            height: 65px;
+        }
+
+        .element-cell {
+            width: 65px;
+            height: 65px;
+            background: white;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;  // 上揃えに変更
+            position: relative;
+            padding: 4px;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .element-cell.empty {
+            border: none;
+            background: transparent;
+            width: 65px;  // 空のセルも同じ幅に
+            height: 65px;
+        }
+
+        .atomic-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .element-symbol {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-top: 12px;
+            background: white;  // 背景を白に
+        }
+
+        .element-price {
+            font-size: 10px;
+            color: #4CAF50;
+            margin-top: auto;  // 上部の余白を自動調整
+            margin-bottom: 2px;
+            text-align: center;
+            width: 35px;
+            background: white;  // 背景を白に
+        }
+
+        @media (max-width: 900px) {
+            .element-cell {
+                width: 35px;
+                height: 35px;
+                padding: 2px;
+            }
+            
+            .periodic-row {
+                height: 35px;
+            }
+            
+            .atomic-number {
+                font-size: 8px;
+            }
+            
+            .element-symbol {
+                font-size: 10px;
+                margin-top: 6px;
+            }
+            
+            .element-price {
+                font-size: 6px;
+                width: 30px;  // モバイル時のセル幅(35px)よりも少し小さく
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
     priceListDiv.appendChild(priceTable);
-    priceListContainer.appendChild(toggleButton);
-    priceListContainer.appendChild(priceListDiv);
-    gameBoard.appendChild(priceListContainer);
+    priceListContainer.appendChild(toggleButton);    // この行を追加
+    priceListContainer.appendChild(priceListDiv);    // この行を追加
+    gameBoard.appendChild(priceListContainer);       // この行を追加
 
     // 研究費の表示を更新
     document.getElementById('research-funding').innerText = `研究費: ${researchFunding}`;
@@ -558,6 +725,33 @@ function updateGameBoard() {
             cardContainer.appendChild(discardButton);
             handDiv.appendChild(cardContainer);
         });
+    }
+
+    // 手札情報の表示を更新
+    const handControlsDiv = document.getElementById('hand-controls');
+    if (handControlsDiv) {
+        // 既存のボタンを探す
+        const existingButton = document.getElementById('expand-hand-button');
+        if (existingButton) {
+            // 既存のボタンを更新
+            const nextCost = getExpansionCost(handLimit);
+            existingButton.textContent = `手札枠を拡張 (¥${nextCost})`;
+            
+            // 研究費が足りない場合はボタンを無効化
+            if (researchFunding < nextCost) {
+                existingButton.disabled = true;
+                existingButton.classList.add('disabled');
+            } else {
+                existingButton.disabled = false;
+                existingButton.classList.remove('disabled');
+            }
+        }
+
+        // 手札枚数の表示を更新
+        const handCountDiv = document.getElementById('hand-count');
+        if (handCountDiv) {
+            handCountDiv.textContent = `手札: ${playerHand.length}/${handLimit}枚`;
+        }
     }
 
     // 敗北条件のチェック
@@ -1067,9 +1261,33 @@ function initializeStyles() {
         #hand-controls {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
-            margin: 0 15px 20px 15px;  /* 上右下左のマージン */
+            margin: 15px 0;
+        }
+
+        #hand-count {
+            font-size: 16px;
+            color: #333;
+        }
+
+        #expand-hand-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #expand-hand-button:hover {
+            background-color: #45a049;
+        }
+
+        #expand-hand-button.disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
 
         /* 手札（アクションカード）のコンテナ */
